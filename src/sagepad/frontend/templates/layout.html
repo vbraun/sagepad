@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" 
+	    type="text/javascript"></script>
+    <script>window.jQuery || 
+      document.write('<script src="{{ url_for('static', filename='js/jquery.js') }}">\x3C/script>')</script>
+    <script src="{{ url_for('static', filename='js/menu.js') }}" type="text/javascript"></script>
+    <link rel="stylesheet" href="static/menu.css" />
+    {% block head %}
+    <link rel="stylesheet" href="static/style.css" />
+    <title>{% block title %}{% endblock %}</title>
+    {% endblock %}
+  </head>
+  <body>
+
+    <script src="{{ url_for('static', filename='js/sagepad.js') }}" type="text/javascript">
+      SagePad.setScriptRoot({{ request.script_root|tojson|safe }});
+    </script>
+
+    <script type=text/javascript>
+      $SAGEPAD_SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    </script>
+
+    <ul id="menu">
+      {% if logged_in %}
+      <li><a href="/">File</a>
+        <ul>
+          <li><a href="#">Load</a></li>
+          <li><a href="#">Save</a></li>
+        </ul>
+      </li>
+      {% else %}
+      <li><a href="{{ login_url }}">File</a>
+        <ul>
+          <li><a href="{{ login_url }}">Login to save</a></li>
+        </ul>
+      </li>
+      {% endif %}
+      <li><a href="/">Run as...</a>
+        <ul>
+          <li><a href="#">Slide Effect</a></li>
+          <li><a href="#">Fade Effect</a></li>
+          <li><a href="#">Opacity Mode</a></li>
+          <li><a href="#">Drop Shadow</a></li>
+          <li><a href="#">Semitransparent</a></li>
+        </ul>
+      </li>
+      <li><a href="#">Settings</a></li>
+      <li><a href="{{ about_url }}">About</a></li>
+      {% if logged_in %}
+      <li class="right"><a href="{{ logout_url }}">{{ nickname }}</a>
+        <ul>
+          <li><a href="{{ logout_url }}">Logout</a></li>
+        </ul>
+      </li>
+      {% else %}
+      <li class="right"><a href="{{ login_url }}">Anonymous</a>
+        <ul>
+          <li><a href="{{ login_url }}">Login</a></li>
+        </ul>
+      </li>
+      {% endif %}
+    </ul>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul id=flashes>
+      {% for message in messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    <script>
+      jQuery('#flashes').delay(3000).slideUp(1000);
+    </script>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+  </body>
+</html>
+

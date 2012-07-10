@@ -1,0 +1,16 @@
+name: f17-webserver
+summary: Webserver running on Fedora 17
+os:
+  name: fedora
+  version: 17
+hardware:
+  cpus: 8
+  memory: 4096
+  partitions:
+    "/":
+      size: 10
+packages:
+  - @core
+  - python-flask
+  - python-flask-openid
+

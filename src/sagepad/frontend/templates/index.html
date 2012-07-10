@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block title %}SagePad{% endblock %}
+{% block content %}
+
+
+<script type="text/javascript">
+  SagePad.foo()
+</script>
+
+
+<p><input type=text size=5 name=a> +
+   <input type=text size=5 name=b> =
+   <span id=result>?</span>
+<p><a href=# id=calculate>calculate server side</a>
+
+<div id="editor">
+@app.route('/login', methods=['GET', 'POST'])
+@oid.loginhandler
+def login():
+    print 'login'
+    if flask.g.user is not None:
+        return redirect(oid.get_next_url())
+    if request.method == 'POST':
+        openid = request.form.get('openid')
+        if openid:
+            return oid.try_login(openid, ask_for=['email', 'fullname', 'nickname'])
+    return render_template('login.html', next=oid.get_next_url(),
+                           error=oid.fetch_error())
+</div>
+<script src="static/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+
+<div id="output">
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+The quick brown fox jumps over the lazy dog. 
+</div>
+
+<!-- <script src="static/js/edit.js" type="text/javascript"></script> -->
+
+{% endblock %}
