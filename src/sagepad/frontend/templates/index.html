@@ -2,17 +2,6 @@
 {% block title %}SagePad{% endblock %}
 {% block content %}
 
-
-<script type="text/javascript">
-  SagePad.foo()
-</script>
-
-
-<p><input type=text size=5 name=a> +
-   <input type=text size=5 name=b> =
-   <span id=result>?</span>
-<p><a href=# id=calculate>calculate server side</a>
-
 <div id="editor">
 @app.route('/login', methods=['GET', 'POST'])
 @oid.loginhandler
@@ -44,6 +33,10 @@ The quick brown fox jumps over the lazy dog.
 The quick brown fox jumps over the lazy dog. 
 </div>
 
-<!-- <script src="static/js/edit.js" type="text/javascript"></script> -->
+<script type="text/javascript">
+  SagePad.initEditor("editor")
+  SagePad.initOutput("output");
+</script>
+
 
 {% endblock %}

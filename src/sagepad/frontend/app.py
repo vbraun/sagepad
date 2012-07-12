@@ -95,7 +95,7 @@ def about():
 
 @app.route('/eval')
 def add_numbers():
-    a = request.args.get('a', 0, type=int)
-    b = request.args.get('b', 0, type=int)
+    import time
+    time.sleep(1)
     code = request.args.get('code', 'Error, no output', type=str)
-    return jsonify(result=a + b, output=code)
+    return jsonify(output=code)

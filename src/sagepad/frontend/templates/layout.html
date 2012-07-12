@@ -19,10 +19,6 @@
       SagePad.setScriptRoot({{ request.script_root|tojson|safe }});
     </script>
 
-    <script type=text/javascript>
-      $SAGEPAD_SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-    </script>
-
     <ul id="menu">
       {% if logged_in %}
       <li><a href="/">File</a>
@@ -38,7 +34,7 @@
         </ul>
       </li>
       {% endif %}
-      <li><a href="/">Run as...</a>
+      <li><a href="#" id="evaluate">Run as...</a>
         <ul>
           <li><a href="#">Slide Effect</a></li>
           <li><a href="#">Fade Effect</a></li>
