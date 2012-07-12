@@ -41,8 +41,10 @@ SagePad.setLayout = function(layout) {
     var h = h_fit;
     switch (layout) {
     case self.LAYOUT_ONLY_EDITOR:
-	if (self.dom_output != null)
+	if (self.dom_output != null) {
 	    h = h + self.dom_output.outerHeight()
+	    self.dom_editor.unbind('click', self.setLayoutEdit);
+	}
 	break;
     case self.LAYOUT_OUTPUT:
 	h = Math.max(h_window/4, h_fit);
@@ -59,11 +61,16 @@ SagePad.setLayout = function(layout) {
 
 SagePad.setLayoutEdit = function() {
     var self = SagePad
+    self.dom_output.text('setLayoutEdit ' + Date());
     if (self.current_layout == self.LAYOUT_OUTPUT) {
 	self.setLayout(self.LAYOUT_EDIT);
     }
-    self.setOutput('setLayoutEdit ' + Date());
     return true;
+}
+
+SagePad.setLayoutInitial = function() {
+    var self = SagePad;
+    self.setLayout(self.LAYOUT_ONLY_EDITOR);
 }
 
 SagePad.initEditor = function(editor_id) {

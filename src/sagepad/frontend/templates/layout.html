@@ -20,6 +20,7 @@
     </script>
 
     <ul id="menu">
+
       {% if logged_in %}
       <li><a href="/">File</a>
         <ul>
@@ -34,25 +35,35 @@
         </ul>
       </li>
       {% endif %}
-      <li><a href="#" id="evaluate">Run as...</a>
+
+      {% if mode == "edit" %}
+      <li><a href="#" id="evaluate">Run</a>
         <ul>
-          <li><a href="#">Slide Effect</a></li>
-          <li><a href="#">Fade Effect</a></li>
-          <li><a href="#">Opacity Mode</a></li>
-          <li><a href="#">Drop Shadow</a></li>
-          <li><a href="#">Semitransparent</a></li>
-        </ul>
+	  <li><a href="#" id="evaluate_sage">
+	      <input type="radio" name="eval_radio" id="eval_radio_sage"/>Sage</a></li>
+	  <li><a href="#" id="evaluate_python">
+	      <input type="radio" name="eval_radio" id="eval_radio_python"/>Python</a></li>
+	  <li><a href="#" id="evaluate_gap">
+	      <input type="radio" name="eval_radio" id="eval_radio_GAP"/>GAP</a></li>
+	  <li><a href="#" id="evaluate_singular">
+	      <input type="radio" name="eval_radio" id="eval_radio_singular"/>Singular</a></li>
+	</ul>
       </li>
       <li><a href="#">Settings</a></li>
+      {% else %}
+      <li><a href="/">Run</a></li>
+      <li><a href="/">Settings</a></li>
+      {% endif %}
+
       <li><a href="{{ about_url }}">About</a></li>
       {% if logged_in %}
-      <li class="right"><a href="{{ logout_url }}">{{ nickname }}</a>
+      <li class="right"><a href="/">{{ nickname }}</a>
         <ul>
           <li><a href="{{ logout_url }}">Logout</a></li>
         </ul>
       </li>
       {% else %}
-      <li class="right"><a href="{{ login_url }}">Anonymous</a>
+      <li class="right"><a href="/">Anonymous</a>
         <ul>
           <li><a href="{{ login_url }}">Login</a></li>
         </ul>
