@@ -13,8 +13,6 @@ from flaskext.openid import OpenID
 
 
 app = Flask(__name__)
-app.config.from_pyfile('config.py')
-
 oid = OpenID(app, 'data-openid')
 
 

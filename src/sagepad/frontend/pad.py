@@ -42,7 +42,7 @@ class Pad(object):
         """
         return True
 
-    def may_edit(self, user)
+    def may_edit(self, user):
         """
         Whether the user may edit the pad
         """
