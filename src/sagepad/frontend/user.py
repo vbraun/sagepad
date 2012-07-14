@@ -2,22 +2,12 @@
 User data
 """
 
-database = dict()
+from pymongo import Connection
 
 
+# always use User.get_database() to access the db
+DATABASE = None
 
-def lookup_user(openid):
-    """
-    Return the :class:`User` with the given ``openid``
-    """
-    try:
-        return database[openid]
-    except KeyError:
-        return None
-
-
-def anonymous_user():
-    return ANONYMOUS
 
 
 class User(object):
@@ -28,8 +18,50 @@ class User(object):
         self._openid = openid
         self._email = email
         self._is_suspended = False
-        database[openid] = self
+        self.save()
 
+    @staticmethod
+    def get_database():
+        """
+        Return the database connection
+        """
+        global DATABASE
+        if DATABASE is None:
+            connection = Connection('localhost', 27017)
+            DATABASE = connection.sagepad['users']
+        return DATABASE
+
+    @staticmethod
+    def anonymous():
+        """
+        Return the anonymous user
+        """
+        global ANONYMOUS
+        return ANONYMOUS
+
+    @staticmethod
+    def lookup(openid):
+        """
+        Find the user with given ``openid`` or return None
+        """
+        db = User.get_database()
+        u = db.find_one({'openid':openid})
+        if u is None:
+            return None
+        else:
+            return User(u['openid'], u['fullname'], u['nickname'], u['email'])
+
+    def save(self):
+        """
+        Save ``self`` to the database
+        """
+        criterion = {'openid' : self._openid}
+        user = {'openid'   : self._openid, 
+                'fullname' : self._fullname, 
+                'nickname' : self._nickname,
+                'email'    : self._email }
+        User.get_database().update(criterion, user, upsert=True)
+             
     def __repr__(self):
         s = ', '.join(map(str,[self._openid, self._fullname, self._nickname, self._email]))
         return 'User('+ s + ')'
@@ -75,7 +107,6 @@ class User(object):
         """
         """
         return self._openid
-
 
 
 

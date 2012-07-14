@@ -2,8 +2,8 @@
 The main web page
 """
 
-from sagepad.frontend.user import User, lookup_user, anonymous_user
-from sagepad.frontend.pad import Pad, lookup_pad
+from sagepad.frontend.user import User
+from sagepad.frontend.pad import Pad
 from sagepad.frontend.database import Database
 
 import flask
@@ -40,7 +40,7 @@ def new_pad_if_none(pad_id=None):
     try:
         return flask.g.pad
     except AttributeError:
-        pad = Pad(flask.g.user, 1)
+        pad = Pad(flask.g.user)
         flask.g.pad = pad
         return pad
         
@@ -50,9 +50,9 @@ def lookup_current_user():
     flask.g.user = None
     if 'openid' in flask.session:
         print 'looking up', flask.session['openid']
-        flask.g.user = lookup_user(flask.session['openid'])
+        flask.g.user = User.lookup(flask.session['openid'])
     if flask.g.user is None:
-        flask.g.user = anonymous_user()
+        flask.g.user = User.anonymous()
     print 'lookup', flask.g.user
 
 
@@ -74,13 +74,13 @@ def create_or_login(resp):
     openid = resp.identity_url
     print 'create_or_login', resp, openid
     flask.session['openid'] = openid
-    user = lookup_user(resp.identity_url)
+    user = User.lookup(resp.identity_url)
     if user is not None:
         flash(u'Welcome back, '+user.fullname())
         flask.g.user = user
     elif openid is None:
         flash(u'Incorrect OpenID, could not sign in')
-        flask.g.user = anonymous_user()
+        flask.g.user = User.anonymous()
     else:
         flash(u'Successfully signed in')
         print request.form
