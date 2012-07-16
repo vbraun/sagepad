@@ -12,13 +12,19 @@ DATABASE = None
 
 class User(object):
 
-    def __init__(self, openid, fullname, nickname, email=None):
-        self._fullname = fullname
-        self._nickname = nickname
-        self._openid = openid
-        self._email = email
+    def __init__(self, data):
+        self._fullname = data['fullname']
+        self._nickname = data['nickname']
+        self._openid = data['openid']
+        try:
+            self._email = data['email']
+        except KeyError:
+            self._email = None
+        try:
+            self._pad_id = data['pad_id']
+        except KeyError:
+            self._pad_id = None
         self._is_suspended = False
-        self.save()
 
     @staticmethod
     def get_database():
@@ -49,7 +55,16 @@ class User(object):
         if u is None:
             return None
         else:
-            return User(u['openid'], u['fullname'], u['nickname'], u['email'])
+            return User(u)
+
+    @staticmethod
+    def make(self, openid, fullname, nickname, email=None):
+        data = { 'openid'   : openid,
+                 'fullname' : fullname,
+                 'nickname' : nickname,
+                 'email'    : email }
+        user = User(data)
+        user.save()
 
     def save(self):
         """
@@ -59,7 +74,8 @@ class User(object):
         user = {'openid'   : self._openid, 
                 'fullname' : self._fullname, 
                 'nickname' : self._nickname,
-                'email'    : self._email }
+                'email'    : self._email,
+                'pad_id'   : self._pad_id }
         User.get_database().update(criterion, user, upsert=True)
              
     def __repr__(self):
@@ -105,10 +121,22 @@ class User(object):
 
     def get_id(self):
         """
+        Return the openid
         """
         return self._openid
 
+    def set_pad(self, pad):
+        self._pad_id = pad._id
+        self.save()
+
+    def get_pad(self):
+        from pad import Pad
+        try:
+            pad_id = self._pad_id
+        except AttributeError:
+            return None
+        return Pad.lookup(pad_id)
 
 
-ANONYMOUS = User(None, 'Anonymous', 'Anonymous', None)
+ANONYMOUS = User({'openid':None, 'fullname':'Anonymous', 'nickname':'Anonymous', 'email':None})
 

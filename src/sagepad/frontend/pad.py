@@ -2,7 +2,8 @@
 The input/output data in a pad
 """
 
-from pymongo import Connection, ObjectId
+from pymongo import Connection
+from pymongo.objectid import ObjectId
 from datetime import datetime
 
 # always use Pad.get_database() to access the db
@@ -24,16 +25,26 @@ print 'Hello, world!'
 
 class Pad(object):
     
-    def __init__(self, db_data)
-        self._id = db_data['_id']
-        self._openid = db_data['openid']
-        self._input = db_data['input']
-        self._output = db_data['output']
-        self._title = title
-        self._mode = mode
-        self._public = public
-        self._ctime = datetime.utcnow()
-        self._mtime = datetime.utcnow()
+    def __init__(self, data):
+        """
+        The Python constructor. You should use :meth:`make` or
+        :meth:`lookup` to construct instances.
+        """
+        try:
+            self._id = data['_id']
+        except KeyError:
+            self._id = None
+        self._openid = data['openid']
+        self._input  = data['input']
+        self._output = data['output']
+        self._title  = data['title']
+        self._mode   = data['mode']
+        self._public = data['public']
+        self._ctime  = data['ctime']
+        try: 
+            self._mtime  = data['mtime']
+        except KeyError:
+            pass
         self.save()
 
     def save(self):
@@ -51,32 +62,38 @@ class Pad(object):
             self._id = db.insert(pad)
         else:
             criterion = {'_id' : self._id}
-            db.update(criterion, user)
+            db.update(criterion, pad)
 
     @staticmethod
-    def make(self, db_entry):
-        return Pad(db_entry['_id'], db_entry['openid'], 
-
-    def make_new(self, openid, pad_input=None, pad_output=None, 
-                 title='Untitled', mode='sage', public=True):
-                       
-
+    def make(openid, pad_input=None, pad_output=None, 
+             title='Untitled', mode='sage', public=True):
+        """
+        Construct a new pad
+        """
+        if pad_input is None:
+            global default_input
+            pad_input = default_input
+        pad = Pad({'openid' : openid, 
+                   'input'  : pad_input,
+                   'output' : pad_output,
+                   'title'  : title,
+                   'mode'   : mode,
+                   'public' : public,
+                   'ctime'  : datetime.utcnow()})
+        pad.save()
+        return pad
 
     @staticmethod
     def lookup(pad_id):
         """
-        Find the pad with given id
+        Find the pad with given id in the database
         """
         db = Pad.get_database()
         data = db.find_one({'_id' :  ObjectId(pad_id)})
         if data is None:
             return None
         else:
-            return Pad.make(data)
-
-    @staticmethod
-    def open_last(user):
-        return Pad(user)
+            return Pad(data)
 
     @staticmethod
     def get_database():

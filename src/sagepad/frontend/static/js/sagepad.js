@@ -4,6 +4,7 @@ var SagePad = SagePad || {};
 
 SagePad.script_root = '';
 SagePad.evaluate_url = '/eval';
+SagePad.save_url = '/save';
 SagePad.editor = null;
 SagePad.output_css_id = '#output';
 
@@ -94,6 +95,7 @@ SagePad.initEditor = function(editor_id) {
     jQuery('a#evaluate').bind('click', self.evaluate);
 
     self.setLayout(self.LAYOUT_ONLY_EDITOR);
+    jQuery(window).unload(SagePad.unload);
 }
 
 SagePad.resize = function() {
@@ -103,16 +105,26 @@ SagePad.resize = function() {
     };
 }
 
-jQuery(window).resize(SagePad.resize);
-
 SagePad.evaluate = function() {
     var self = SagePad;
     self.setOutput('Please wait, computing...');
-    jQuery.getJSON(self.evaluate_url, { 
+    jQuery.post(self.evaluate_url, { 
 	code: self.editor.getValue(),
     }, self.evaluate_callback);
 }
 
+SagePad.save = function() {
+    var self = SagePad;
+    jQuery.post(self.save_url, { 
+	code: self.editor.getValue(),
+    });
+}
+
+SagePad.unload = function() {
+    var self = SagePad;
+    jQuery.ajaxSetup({async:false});
+    self.save();
+}
 
 SagePad.evaluate_callback = function(data) {
     var self = SagePad;
@@ -126,3 +138,5 @@ SagePad.setOutput = function(output) {
     self.dom_output.text(output);
     self.setLayout(self.LAYOUT_OUTPUT);
 }
+
+jQuery(window).resize(SagePad.resize);

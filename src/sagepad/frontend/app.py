@@ -21,9 +21,15 @@ def render_template(*args, **kwds):
     kwds['login_url']  = url_for('login')
     kwds['logout_url'] = url_for('logout')
     kwds['about_url']  = url_for('about')
-    if 'mode' not in kwds:
-        kwds['mode'] = 'default'
-    print 'user = ', user
+    if 'menu_mode' not in kwds:
+        kwds['menu_mode'] = 'default'
+
+    pad = flask.g.pad
+    kwds['pad_input']  = pad.get_input()
+    kwds['pad_output'] = pad.get_output()
+    kwds['eval_mode']  = pad.get_eval_mode()
+    kwds['title']      = pad.get_title()
+
     if user.is_anonymous():
         kwds['logged_in'] = False
         return flask.render_template(*args, **kwds)
@@ -35,25 +41,32 @@ def render_template(*args, **kwds):
         return flask.render_template(*args, **kwds)
 
 
-def new_pad_if_none(pad_id=None):
-    print 'g', flask.g.user, flask.session['openid']
-    try:
-        return flask.g.pad
-    except AttributeError:
-        pad = Pad(flask.g.user)
-        flask.g.pad = pad
-        return pad
-        
 
 @app.before_request
 def lookup_current_user():
-    flask.g.user = None
+    try:
+        user = flask.g.user
+        pad = flask.g.pad
+        return
+    except AttributeError:
+        pass
+
+    # find user
+    user = None
     if 'openid' in flask.session:
-        print 'looking up', flask.session['openid']
-        flask.g.user = User.lookup(flask.session['openid'])
-    if flask.g.user is None:
-        flask.g.user = User.anonymous()
-    print 'lookup', flask.g.user
+        user = User.lookup(flask.session['openid'])
+    if user is None:
+        user = User.anonymous()
+    flask.g.user = user
+
+    # find pad
+    pad = user.get_pad()
+    if pad is None:
+        pad = Pad.make(user.get_id())
+        user.set_pad(pad)
+    flask.g.pad = pad
+
+    # print 'lookup', flask.g.user.get_id(), flask.g.pad._id
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -99,9 +112,8 @@ def logout():
 
 @app.route('/')
 def index():
-    new_pad_if_none()
     # flash(u'index')
-    return render_template('index.html', mode='edit')
+    return render_template('index.html', menu_mode='edit')
 
 @app.route('/pad/<pad_id>')
 def show_user(pad_id):
@@ -114,9 +126,23 @@ def show_user(pad_id):
 def about():
     return render_template('about.html')
 
-@app.route('/eval')
-def add_numbers():
+@app.route('/save', methods=['POST'])
+def save():
+    error_str = 'Error, no code'
+    pad_input = request.form.get('code', error_str, type=str)
+    if pad_input != error_str:
+        flask.g.pad.set_input(pad_input)
+    return jsonify(saved=True)
+
+@app.route('/eval', methods=['POST'])
+def evaluate():
     import time
     time.sleep(1)
-    code = request.args.get('code', 'Error, no output', type=str)
-    return jsonify(output=code)
+    error_str = 'Error, no code'
+    pad_input = request.form.get('code', error_str, type=str)
+    if pad_input != error_str:
+        pad_output = 'Output\n'+pad_input
+    pad = flask.g.pad
+    pad.set_input(pad_input)
+    pad.set_output(pad_output)
+    return jsonify(output=pad_output)
