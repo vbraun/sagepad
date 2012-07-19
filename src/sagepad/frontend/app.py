@@ -7,7 +7,7 @@ from sagepad.frontend.pad import Pad
 from sagepad.frontend.database import Database
 
 import flask
-from flask import Flask, request, redirect, url_for, flash, jsonify
+from flask import Flask, request, redirect, url_for, flash, jsonify, escape
 
 from flaskext.openid import OpenID
 
@@ -26,7 +26,7 @@ def render_template(*args, **kwds):
 
     pad = flask.g.pad
     kwds['pad_input']  = pad.get_input()
-    kwds['pad_output'] = pad.get_output()
+    kwds['pad_output'] = escape(pad.get_output())
     kwds['eval_mode']  = pad.get_eval_mode()
     kwds['title']      = pad.get_title()
 
@@ -115,12 +115,12 @@ def index():
     # flash(u'index')
     return render_template('index.html', menu_mode='edit')
 
-@app.route('/pad/<pad_id>')
-def show_user(pad_id):
-    # show the user profile for that user
-    flash(u'Pad '+str(pad_id))
-    return 'Pad %s' % pad_id
-    return render_template('index.html')
+#@app.route('/pad/<pad_id>')
+#def show_user(pad_id):
+#    # show the user profile for that user
+#    flash(u'Pad '+str(pad_id))
+#    return 'Pad %s' % pad_id
+#    return render_template('index.html')
 
 @app.route('/about')
 def about():
@@ -130,6 +130,7 @@ def about():
 def save():
     error_str = 'Error, no code'
     pad_input = request.form.get('code', error_str, type=str)
+    print pad_input.splitlines()
     if pad_input != error_str:
         flask.g.pad.set_input(pad_input)
     return jsonify(saved=True)

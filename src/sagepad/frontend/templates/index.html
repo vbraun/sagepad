@@ -2,19 +2,34 @@
 {% block title %}SagePad - {{ title }}{% endblock %}
 {% block content %}
 
-<div id="editor">
-{{ pad_input }}
-</div>
+<div id="editor">{{ pad_input }}</div>
 <script src="static/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 
-<div id="output">
-{{ pad_output }}
+<div id="output">{{ pad_output }}</div>
+
+<div id="settings" title="Settings">
+  <p class="validateTips">All form fields are required.</p>
+  <form>
+    <fieldset>
+      <label for="name">Name</label>
+      <input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
+      <label for="email">Email</label>
+      <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
+    </fieldset>
+  </form>
 </div>
+
 
 <script type="text/javascript">
   SagePad.initEditor("editor")
   SagePad.initOutput("output");
+  SagePad.initSettings("settings");
 </script>
+
+
+
 
 
 {% endblock %}

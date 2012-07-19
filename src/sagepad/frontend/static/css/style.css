@@ -28,17 +28,29 @@ body {
 #editor {
     position: relative;
     width: 100%;
-    height: 100px;
+    height: 100%;
     font-size: 14px;
 }
 
 #output {
+    margin-top: 1px;
     background: #FFF9B8;
     width: 100%;
     padding: 20px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+    font-weigth: bold;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+    overflow: auto;
 }
 
 #about {
     background: #FFF9B8;
     padding: 10px;
+}
+
+.ui-dialog-titlebar {
+    font-size: 12px;
 }
