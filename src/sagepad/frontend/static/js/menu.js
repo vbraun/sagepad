@@ -1,37 +1,40 @@
-var timeout    = 500;
-var closetimer = 0;
-var ddmenuitem = 0;
 
-function menu_open()
-{  
-    menu_canceltimer();
-    menu_close();
-    ddmenuitem = $(this).find('ul').css('visibility', 'visible');
-}
+var Menu = Menu || {};
 
-function menu_close()
-{  
-    if(ddmenuitem) ddmenuitem.css('visibility', 'hidden');
-}
 
-function menu_timer()
-{  
-    closetimer = window.setTimeout(menu_close, timeout);
-}
+Menu.timeout    = 500;
+Menu.closetimer = null;
+Menu.item = null;
+    
 
-function menu_canceltimer()
-{  
-    if(closetimer)
-    {  
-	window.clearTimeout(closetimer);
-	closetimer = null;
+Menu.close = function() {
+    var self = Menu;
+    if (self.item != null) 
+	self.item.css('visibility', 'hidden');
+};
+    
+Menu.canceltimer = function () { 
+    var self = Menu;
+    if (self.closetimer) {  
+	window.clearTimeout(self.closetimer);
+	self.closetimer = null;
     }
-}
+};
+    
+Menu.open = function () { 
+    var self = Menu;
+    self.canceltimer();
+    self.close();
+    self.item = jQuery(this).find('ul').css('visibility', 'visible');
+};
 
-$(document).ready(function() 
-{  
-    $('#menu > li').bind('mouseover', menu_open)
-    $('#menu > li').bind('mouseout',  menu_timer)
-});
+Menu.register = function(css_id) {
+    var self = Menu;
+    self.css_id = css_id;
+    jQuery(css_id + ' > li').bind('mouseover', self.open);
+    jQuery(css_id + ' > li').bind('mouseout',  self.canceltimer);
+    jQuery(document).bind('click', self.close);
+};
 
-document.onclick = menu_close;
+
+

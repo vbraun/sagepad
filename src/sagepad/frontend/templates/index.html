@@ -3,27 +3,150 @@
 {% block content %}
 
 <div id="editor">{{ pad_input }}</div>
-<script src="static/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<!-- <script src="static/ace/ace.js" type="text/javascript" charset="utf-8"></script> -->
 
 <div id="output">{{ pad_output }}</div>
 
+<!-- 	<style> -->
+<!-- 		body { font-size: 62.5%; } -->
+<!-- 		label, input { display:block; } -->
+<!-- 		input.text { margin-bottom:12px; width:95%; padding: .4em; } -->
+<!-- 		fieldset { padding:0; border:0; margin-top:25px; } -->
+<!-- 		h1 { font-size: 1.2em; margin: .6em 0; } -->
+<!-- 		div#users-contain { width: 350px; margin: 20px 0; } -->
+<!-- 		div#users-contain table { margin: 1em 0; border-collapse: collapse; width: 100%; } -->
+<!-- 		div#users-contain table td, div#users-contain table th { border: 1px solid #eee; padding: .6em 10px; text-align: left; } -->
+<!-- 		.ui-dialog .ui-state-error { padding: .3em; } -->
+<!-- 		.validateTips { border: 1px solid transparent; padding: 0.3em; } -->
+<!-- 	</style> -->
+
+<!-- <div id="settings" title="Create new user"> -->
+<!-- 	<p class="validateTips">All form fields are required.</p> -->
+
+<!-- 	<form> -->
+<!-- 	<fieldset> -->
+<!-- 		<label for="name">Name</label> -->
+<!-- 		<input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" /> -->
+<!-- 		<label for="email">Email</label> -->
+<!-- 		<input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" /> -->
+<!-- 		<label for="password">Password</label> -->
+<!-- 		<input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" /> -->
+<!-- 	</fieldset> -->
+<!-- 	</form> -->
+<!-- </div> -->
+
+
+
 <div id="settings" title="Settings">
-  <p class="validateTips">All form fields are required.</p>
   <form>
-    <fieldset>
-      <label for="name">Name</label>
-      <input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
-      <label for="email">Email</label>
-      <input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
-      <label for="password">Password</label>
-      <input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
-    </fieldset>
+    <table id="controls">
+      <tr>
+	<td >
+          <label for="settings_theme">Theme</label>
+	</td><td>
+          <select id="settings_theme" size="1">
+            <option value="ace/theme/chrome">Chrome</option>
+            <option value="ace/theme/clouds">Clouds</option>
+            <option value="ace/theme/clouds_midnight">Clouds Midnight</option>
+            <option value="ace/theme/cobalt">Cobalt</option>
+            <option value="ace/theme/crimson_editor">Crimson Editor</option>
+            <option value="ace/theme/dawn">Dawn</option>
+            <option value="ace/theme/dreamweaver">Dreamweaver</option>
+            <option value="ace/theme/eclipse">Eclipse</option>
+            <option value="ace/theme/idle_fingers">idleFingers</option>
+            <option value="ace/theme/kr_theme">krTheme</option>
+            <option value="ace/theme/merbivore">Merbivore</option>
+            <option value="ace/theme/merbivore_soft">Merbivore Soft</option>
+            <option value="ace/theme/mono_industrial">Mono Industrial</option>
+            <option value="ace/theme/monokai">Monokai</option>
+            <option value="ace/theme/pastel_on_dark">Pastel on dark</option>
+            <option value="ace/theme/solarized_dark">Solarized Dark</option>
+            <option value="ace/theme/solarized_light">Solarized Light</option>
+            <option value="ace/theme/textmate">TextMate</option>
+            <option value="ace/theme/twilight">Twilight</option>
+            <option value="ace/theme/tomorrow">Tomorrow</option>
+            <option value="ace/theme/tomorrow_night">Tomorrow Night</option>
+            <option value="ace/theme/tomorrow_night_blue">Tomorrow Night Blue</option>
+            <option value="ace/theme/tomorrow_night_bright">Tomorrow Night Bright</option>
+            <option value="ace/theme/tomorrow_night_eighties">Tomorrow Night 80s</option>
+            <option value="ace/theme/vibrant_ink">Vibrant Ink</option>
+          </select>
+	</td>
+      </tr>
+      <tr>
+	<td>
+          <label for="settings_fontsize">Font size</label>
+	</td><td>
+          <select id="settings_fontsize" size="1">
+            <option value="x-small">Extra small</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="x-large">Extra large</option>
+          </select>
+	</td>
+      </tr>
+      <tr>
+	<td>
+          <label for="settings_folding">Code folding</label>
+	</td><td>
+          <select id="settings_folding" size="1">
+            <option value="manual">Manual</option>
+            <option value="markbegin">Mark begin</option>
+            <option value="markbeginend">Mark begin and end</option>
+          </select>
+	</td>
+      </tr>
+      <tr>
+	<td >
+          <label for="keybinding">Key bindings</label>
+	</td><td>
+          <select id="keybinding" size="1">
+            <option value="ace">Ace</option>
+            <option value="vim">Vim</option>
+            <option value="emacs">Emacs</option>
+          </select>
+	</td>
+      </tr>
+      <tr><td colspan="2">
+	  <table id="more-controls">
+	    <tr>
+	      <td>
+		<label for="highlight_current">Highlight current line</label>
+	      </td><td>
+		<input type="checkbox" name="highlight_current" id="highlight_current" checked>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td >
+		<label for="show_whitespace">Show whitespace</label>
+	      </td><td>
+		<input type="checkbox" name="show_whitespace" id="show_whitespace" checked>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td >
+		<label for="show_line_numbers">Line numbers</label>
+	      </td><td>
+		<input type="checkbox" id="show_line_numbers" checked>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td >
+		<label for="show_col_80">Show line margin</label>
+	      </td><td>
+		<input type="checkbox" id="show_col_80" checked>
+	      </td>
+	    </tr>
+	  </table>
+      </td></tr>
+    </table>
   </form>
 </div>
 
 
-<script type="text/javascript">
-  SagePad.initEditor("editor")
+<script>
+  SagePad.initEditor("editor");
   SagePad.initOutput("output");
   SagePad.initSettings("settings");
 </script>

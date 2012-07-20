@@ -99,6 +99,28 @@ SagePad.setLayoutInitial = function() {
     self.setLayout(self.LAYOUT_ONLY_EDITOR);
 }
 
+SagePad.setFontSize = function(fontsize) {
+    var self = SagePad;
+    self._font_size = fontsize;
+    self.dom_editor.css('font-size', fontsize);
+}
+
+SagePad.getFontSize = function() {
+    var self = SagePad;
+    return self._font_size;
+}
+
+SagePad.setFolding = function(folding) {
+    var self = SagePad;
+    self._folding = folding;
+    self.editor.session.setFoldStyle(folding);
+}
+
+SagePad.getFolding = function() {
+    var self = SagePad;
+    return self._folding;
+}
+
 SagePad.initEditor = function(editor_id) {
     var self = SagePad;
     self.editor_id = editor_id;
@@ -109,14 +131,15 @@ SagePad.initEditor = function(editor_id) {
     e.session.setMode('ace/mode/python');
     e.getSession().setUseSoftTabs(true);
     e.renderer.setHScrollBarAlwaysVisible(true); 
-
     e.onCursorChange(self.setLayoutEdit);
-
     e.commands.addCommand({
 	name: 'myEvaluateCommand',
 	bindKey: {win: 'Ctrl-Return',  mac: 'Command-Return'},
 	exec: self.evaluate
     });
+    self.setFolding('manual');
+    self.setFontSize('medium');
+
     jQuery('a#evaluate').bind('click', self.evaluate);
     jQuery('a#menu_save').bind('click', self.save);
 
@@ -170,42 +193,16 @@ SagePad.initSettings = function(settings_id) {
     self.settings_id = settings_id;
     var settings_css_id = self.settings_css_id = '#' + settings_id;
     jQuery(settings_css_id).dialog({
-	autoOpen: false,
-	// height: 300,
-	// width: 350,
-	modal: true,
-	buttons: {
-	    "Create an account": function() {
-		var bValid = true;
-		allFields.removeClass( "ui-state-error" );
-		
-		bValid = bValid && checkLength( name, "username", 3, 16 );
-		bValid = bValid && checkLength( email, "email", 6, 80 );
-		bValid = bValid && checkLength( password, "password", 5, 16 );
-		
-		bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, 0-9, underscores, begin with a letter." );
-		// From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
-		bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "eg. ui@jquery.com" );
-		bValid = bValid && checkRegexp( password, /^([0-9a-zA-Z])+$/, "Password field only allow : a-z 0-9" );
-		
-		if ( bValid ) {
-		    $( "#users tbody" ).append( "<tr>" +
-						"<td>" + name.val() + "</td>" + 
-						"<td>" + email.val() + "</td>" + 
-						"<td>" + password.val() + "</td>" +
-						"</tr>" ); 
-		    $( this ).dialog( "close" );
-		}
-	    },
-	    Cancel: function() {
-		$( this ).dialog( "close" );
-	    }
-	},
-	close: function() {
-				allFields.val( "" ).removeClass( "ui-state-error" );
-	}
+	// autoOpen: false,
+	modal: true
     });
     jQuery('a#menu_settings').bind('click', self.showSettings);
+    jQuery('#settings_theme').change(SagePad.settingsThemeCallback);
+    jQuery('#settings_theme option[value="' + self.editor.getTheme() + '"]').attr('selected', 'selected');
+    jQuery('#settings_fontsize').change(SagePad.settingsFontSizeCallback);
+    jQuery('#settings_fontsize option[value="' + self.getFontSize() + '"]').attr('selected', 'selected');
+    jQuery('#settings_folding').change(SagePad.settingsFoldingCallback);
+    jQuery('#settings_folding option[value="' + self.getFolding() + '"]').attr('selected', 'selected');
 }
 
 SagePad.showSettings = function() {
@@ -213,4 +210,24 @@ SagePad.showSettings = function() {
     jQuery(self.settings_css_id).dialog('open');
 }
 
+SagePad.settingsThemeCallback = function() {
+    var self = SagePad;
+    var theme = jQuery('#settings_theme option:selected').val();
+    self.editor.setTheme(theme);
+}
+
+SagePad.settingsFontSizeCallback = function() {
+    var self = SagePad;
+    var fontsize = jQuery('#settings_fontsize option:selected').val();
+    self.setFontSize(fontsize);
+}
+
+SagePad.settingsFoldingCallback = function() {
+    var self = SagePad;
+    var folding = jQuery('#settings_folding option:selected').val();
+    self.setFolding(folding);
+}
+
+
 jQuery(window).resize(SagePad.resize);
+
