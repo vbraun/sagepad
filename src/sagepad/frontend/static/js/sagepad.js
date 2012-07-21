@@ -1,10 +1,15 @@
 
 var SagePad = SagePad || {};
 
+SagePad.setScriptRoot = function(script_root) {
+    var self = SagePad;
+    self.script_root = script_root;
+    self.evaluate_url = script_root + '/_eval'
+    self.save_url = script_root + '/_save'
+}
 
-SagePad.script_root = '';
-SagePad.evaluate_url = '/eval';
-SagePad.save_url = '/save';
+SagePad.setScriptRoot('');
+
 SagePad.editor = null;
 SagePad.output_css_id = '#output';
 
@@ -14,11 +19,6 @@ SagePad.dom_window = jQuery(window)
 SagePad.dom_body = jQuery('body')
 
 
-SagePad.setScriptRoot = function(script_root) {
-    var self = SagePad;
-    self.script_root = script_root;
-    self.evaluate_url = script_root + '/eval'
-}
 
 SagePad.initOutput = function(output) {
     var self = SagePad;
@@ -121,6 +121,18 @@ SagePad.getFolding = function() {
     return self._folding;
 }
 
+SagePad.setKeybinding = function(keybinding) {
+    var self = SagePad;
+    self._keybinding = keybinding;
+    var handler = ace.require('ace/keyboard/' + keybinding).handler;
+    self.editor.setKeyboardHandler(handler);
+}    
+
+SagePad.getKeybinding = function() {
+    var self = SagePad;
+    return self._keybinding;
+}
+
 SagePad.initEditor = function(editor_id) {
     var self = SagePad;
     self.editor_id = editor_id;
@@ -139,6 +151,7 @@ SagePad.initEditor = function(editor_id) {
     });
     self.setFolding('manual');
     self.setFontSize('medium');
+    self.setKeybinding('emacs');
 
     jQuery('a#evaluate').bind('click', self.evaluate);
     jQuery('a#menu_save').bind('click', self.save);
@@ -193,7 +206,7 @@ SagePad.initSettings = function(settings_id) {
     self.settings_id = settings_id;
     var settings_css_id = self.settings_css_id = '#' + settings_id;
     jQuery(settings_css_id).dialog({
-	// autoOpen: false,
+	autoOpen: false,
 	modal: true
     });
     jQuery('a#menu_settings').bind('click', self.showSettings);
@@ -203,6 +216,16 @@ SagePad.initSettings = function(settings_id) {
     jQuery('#settings_fontsize option[value="' + self.getFontSize() + '"]').attr('selected', 'selected');
     jQuery('#settings_folding').change(SagePad.settingsFoldingCallback);
     jQuery('#settings_folding option[value="' + self.getFolding() + '"]').attr('selected', 'selected');
+    jQuery('#settings_keybinding').change(SagePad.settingsKeybindingCallback);
+    jQuery('#settings_keybinding option[value="' + self.getKeybinding() + '"]').attr('selected', 'selected');
+    jQuery('#settings_highlight_line').change(self.settingsHighlightLine);
+    jQuery('#settings_highlight_line').prop('checked', self.editor.getHighlightActiveLine());
+    jQuery('#settings_show_whitespace').change(self.settingsShowWhitespaceCallback);
+    jQuery('#settings_show_whitespace').prop('checked', self.editor.getShowInvisibles());
+    jQuery('#settings_line_numbers').change(self.settingsLineNumbers);
+    jQuery('#settings_line_numbers').prop('checked', self.editor.renderer.getShowGutter());
+    jQuery('#settings_show_col_80').change(self.settingsShowCol80);
+    jQuery('#settings_show_col_80').prop('checked', self.editor.getShowPrintMargin());
 }
 
 SagePad.showSettings = function() {
@@ -228,6 +251,37 @@ SagePad.settingsFoldingCallback = function() {
     self.setFolding(folding);
 }
 
+SagePad.settingsKeybindingCallback = function() {
+    var self = SagePad;
+    var keybinding = jQuery('#settings_keybinding option:selected').val();
+    console.log(keybinding);
+    self.setKeybinding(keybinding);
+}
+
+SagePad.settingsHighlightLine = function() {
+    var self = SagePad;
+    var checked = jQuery('#settings_highlight_line').prop('checked');
+    console.log(checked);
+    self.editor.setHighlightActiveLine(checked);
+}
+
+SagePad.settingsShowWhitespaceCallback = function() {
+    var self = SagePad;
+    var checked = jQuery('#settings_show_whitespace').prop('checked');
+    self.editor.setShowInvisibles(checked);
+}
+
+SagePad.settingsLineNumbers = function() {
+    var self = SagePad;
+    var checked = jQuery('#settings_line_numbers').prop('checked');
+    self.editor.renderer.setShowGutter(checked);
+}
+
+SagePad.settingsShowCol80 = function() {
+    var self = SagePad;
+    var checked = jQuery('#settings_show_col_80').prop('checked');
+    self.editor.setShowPrintMargin(checked);
+}
 
 jQuery(window).resize(SagePad.resize);
 

@@ -21,14 +21,16 @@ def render_template(*args, **kwds):
     kwds['login_url']  = url_for('login')
     kwds['logout_url'] = url_for('logout')
     kwds['about_url']  = url_for('about')
-    if 'menu_mode' not in kwds:
-        kwds['menu_mode'] = 'default'
+    kwds['load_url']   = url_for('load')
 
     pad = flask.g.pad
     kwds['pad_input']  = pad.get_input()
     kwds['pad_output'] = escape(pad.get_output())
     kwds['eval_mode']  = pad.get_eval_mode()
     kwds['title']      = pad.get_title()
+
+    if not kwds.has_key('scroll_y'):
+        kwds['scroll_y'] = False
 
     if user.is_anonymous():
         kwds['logged_in'] = False
@@ -115,6 +117,16 @@ def index():
     # flash(u'index')
     return render_template('index.html', menu_mode='edit')
 
+@app.route('/_menu', methods=['GET'])
+def menu_ajax():
+    pad = flask.g.pad
+    eval_mode = request.args.get('eval_mode', '', type=str);
+    if eval_mode == '':
+        eval_mode = pad.get_eval_mode()
+    else:
+        pad.set_eval_mode(eval_mode)
+    return jsonify(eval_mode=eval_mode)
+
 #@app.route('/pad/<pad_id>')
 #def show_user(pad_id):
 #    # show the user profile for that user
@@ -124,10 +136,14 @@ def index():
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    return render_template('about.html', menu_mode='about')
 
-@app.route('/save', methods=['POST'])
-def save():
+@app.route('/load')
+def load():
+    return render_template('load.html', pads=[flask.g.pad]*5, scroll_y=True)
+
+@app.route('/_save', methods=['POST'])
+def save_ajax():
     error_str = 'Error, no code'
     pad_input = request.form.get('code', error_str, type=str)
     print pad_input.splitlines()
@@ -135,8 +151,8 @@ def save():
         flask.g.pad.set_input(pad_input)
     return jsonify(saved=True)
 
-@app.route('/eval', methods=['POST'])
-def evaluate():
+@app.route('/_eval', methods=['POST'])
+def evaluate_ajax():
     import time
     time.sleep(1)
     error_str = 'Error, no code'

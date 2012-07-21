@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+
+{% block title %}Load existing pad...{% endblock %}
+
+
+{% block menu %}
+<li><a href="/">Back</a></li>
+<li><a href="{{ about_url }}">About</a></li>
+{% endblock %}   
+
+
+{% block content %}
+<table id="load">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Saved</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for pad in pads %}
+    <tr>
+      <td class="title">{{ pad.get_title() }}</td>
+      <td>{{ pad.pretty_mtime() }}</td>
+      <td>Del</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

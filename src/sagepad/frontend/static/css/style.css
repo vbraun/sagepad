@@ -6,6 +6,9 @@ body {
     overflow-y: hidden;
 }
 
+#scroll_y {
+    overflow-y: auto;
+}
 
 #flashes {
     margin: 0;
@@ -60,4 +63,44 @@ body {
       font-size: 0.1px;
       z-index: 99999; 
       display: block;
+}
+
+
+
+
+#load
+{
+    font-family: "Arial", sans-serif;
+    font-size: medium;
+    color: #888;
+    background: #fff;
+    margin: 5%;
+    width: 90%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+#load .title {
+    font-family: "Courier", monospace;
+    width: 70%;
+}
+
+#load th
+{
+    font-size: large;
+    font-weight: bold;
+    color: #666;
+    padding: 10px 8px;
+    border-bottom: 2px solid #aaa;
+}
+
+#load td
+{
+    border-bottom: 1px solid #aaa;
+    padding: 10px 10px;
+}
+
+#load tbody tr:hover td
+{
+    color: #000;
 }

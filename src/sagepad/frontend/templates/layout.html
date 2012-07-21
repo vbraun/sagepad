@@ -17,7 +17,10 @@
 
     <script src="{{ url_for('static', filename='js/menu.js') }}" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/sagepad.js') }}" type="text/javascript"></script>
+
     <script src="{{ url_for('static', filename='js/ace/ace.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='js/ace/keybinding-emacs.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='js/ace/keybinding-vim.js') }}" type="text/javascript"></script>
 
     <link rel="stylesheet" href="static/css/jquery-ui.css" />
     <link rel="stylesheet" href="static/css/menu.css" />
@@ -27,44 +30,31 @@
     <title>{% block title %}{% endblock %}</title>
     {% endblock %}
   </head>
-  <body>
+
+  
+  <body {% if scroll_y %}id="scroll_y"{% endif %}>
+   
 
     <ul id="menu">
-      {% if logged_in %}
-      <li><a href="/">File</a>
-        <ul>
-          <li><a href="#">Load</a></li>
-          <li><a href="#" id="menu_save">Save</a></li>
-        </ul>
-      </li>
-      {% else %}
-      <li><a href="{{ login_url }}">File</a>
-        <ul>
-          <li><a href="{{ login_url }}">Login to save</a></li>
-        </ul>
-      </li>
-      {% endif %}
+      {% block menu %}{% endblock %}
 
-      {% if menu_mode == "edit" %}
-      <li><a href="#" id="evaluate">Run</a>
-        <ul>
-	  <li><a href="#" id="evaluate_sage">
-	      <input type="radio" name="eval_radio" id="eval_radio_sage"/>Sage</a></li>
-	  <li><a href="#" id="evaluate_python">
-	      <input type="radio" name="eval_radio" id="eval_radio_python"/>Python</a></li>
-	  <li><a href="#" id="evaluate_gap">
-	      <input type="radio" name="eval_radio" id="eval_radio_GAP"/>GAP</a></li>
-	  <li><a href="#" id="evaluate_singular">
-	      <input type="radio" name="eval_radio" id="eval_radio_singular"/>Singular</a></li>
-	</ul>
-      </li>
-      <li><a href="#" id="menu_settings">Settings</a></li>
-      {% else %}
-      <li><a href="/">Run</a></li>
-      <li><a href="/">Settings</a></li>
-      {% endif %}
 
-      <li><a href="{{ about_url }}">About</a></li>
+      <!-- {% if menu_mode == "default" %} -->
+      <!-- {% if logged_in %} -->
+      <!-- <li><a href="/">File</a> -->
+      <!--   <ul> -->
+      <!--     <li><a href="{{ load_url }}">Load</a></li> -->
+      <!--   </ul> -->
+      <!-- </li> -->
+      <!-- {% else %} -->
+      <!-- <li><a href="{{ login_url }}">File</a> -->
+      <!--   <ul> -->
+      <!--     <li><a href="{{ login_url }}">Login to load/save</a></li> -->
+      <!--   </ul> -->
+      <!-- </li> -->
+      <!-- {% endif %} -->
+      <!-- {% endif %} -->
+
       {% if logged_in %}
       <li class="right"><a href="/">{{ nickname }}</a>
         <ul>
@@ -82,11 +72,8 @@
 
     <script>
       Menu.register("#menu");
-    </script>
-
-
-    <script>
-      SagePad.setScriptRoot({{ request.script_root|tojson|safe }});
+      Menu.setEvaluateRadio("{{ eval_mode }}");
+      Menu.setScriptRoot({{ request.script_root|tojson|safe }});
     </script>
 
 
@@ -97,9 +84,6 @@
       <li>{{ message }}</li>
       {% endfor %}
     </ul>
-    <script>
-      jQuery("#flashes").delay(3000).slideUp(1000, require("sagepad/edit").resize);
-    </script>
     {% endif %}
     {% endwith %}
 

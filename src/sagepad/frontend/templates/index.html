@@ -1,41 +1,39 @@
 {% extends "layout.html" %}
 {% block title %}SagePad - {{ title }}{% endblock %}
+
+
+{% block menu %}
+{% if logged_in %}
+<li><a href="/">File</a>
+  <ul>
+    <li><a href="{{ load_url }}">Load</a></li>
+    <li><a href="#" id="menu_save">Save</a></li>
+  </ul>
+</li>
+{% else %}
+<li><a href="{{ login_url }}">File</a>
+  <ul>
+    <li><a href="{{ login_url }}">Login to load/save</a></li>
+  </ul>
+</li>
+{% endif %}
+<li><a href="#" id="evaluate">Run</a>
+  <ul>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="sage"/>Sage</a></li>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="python"/>Python</a></li>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="gap"/>GAP</a></li>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="singular"/>Singular</a></li>
+  </ul>
+</li>
+<li><a href="#" id="menu_settings">Settings</a></li>
+<li><a href="{{ about_url }}">About</a></li>
+{% endblock %}
+
+
+
 {% block content %}
-
 <div id="editor">{{ pad_input }}</div>
-<!-- <script src="static/ace/ace.js" type="text/javascript" charset="utf-8"></script> -->
-
 <div id="output">{{ pad_output }}</div>
-
-<!-- 	<style> -->
-<!-- 		body { font-size: 62.5%; } -->
-<!-- 		label, input { display:block; } -->
-<!-- 		input.text { margin-bottom:12px; width:95%; padding: .4em; } -->
-<!-- 		fieldset { padding:0; border:0; margin-top:25px; } -->
-<!-- 		h1 { font-size: 1.2em; margin: .6em 0; } -->
-<!-- 		div#users-contain { width: 350px; margin: 20px 0; } -->
-<!-- 		div#users-contain table { margin: 1em 0; border-collapse: collapse; width: 100%; } -->
-<!-- 		div#users-contain table td, div#users-contain table th { border: 1px solid #eee; padding: .6em 10px; text-align: left; } -->
-<!-- 		.ui-dialog .ui-state-error { padding: .3em; } -->
-<!-- 		.validateTips { border: 1px solid transparent; padding: 0.3em; } -->
-<!-- 	</style> -->
-
-<!-- <div id="settings" title="Create new user"> -->
-<!-- 	<p class="validateTips">All form fields are required.</p> -->
-
-<!-- 	<form> -->
-<!-- 	<fieldset> -->
-<!-- 		<label for="name">Name</label> -->
-<!-- 		<input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" /> -->
-<!-- 		<label for="email">Email</label> -->
-<!-- 		<input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" /> -->
-<!-- 		<label for="password">Password</label> -->
-<!-- 		<input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" /> -->
-<!-- 	</fieldset> -->
-<!-- 	</form> -->
-<!-- </div> -->
-
-
 
 <div id="settings" title="Settings">
   <form>
@@ -91,7 +89,7 @@
           <label for="settings_folding">Code folding</label>
 	</td><td>
           <select id="settings_folding" size="1">
-            <option value="manual">Manual</option>
+            <option value="ace">Manual</option>
             <option value="markbegin">Mark begin</option>
             <option value="markbeginend">Mark begin and end</option>
           </select>
@@ -99,10 +97,10 @@
       </tr>
       <tr>
 	<td >
-          <label for="keybinding">Key bindings</label>
+          <label for="settings_keybinding">Key bindings</label>
 	</td><td>
-          <select id="keybinding" size="1">
-            <option value="ace">Ace</option>
+          <select id="settings_keybinding" size="1">
+            <option value="keybinding">Ace</option>
             <option value="vim">Vim</option>
             <option value="emacs">Emacs</option>
           </select>
@@ -112,30 +110,30 @@
 	  <table id="more-controls">
 	    <tr>
 	      <td>
-		<label for="highlight_current">Highlight current line</label>
+		<label for="settings_highlight_line">Highlight current line</label>
 	      </td><td>
-		<input type="checkbox" name="highlight_current" id="highlight_current" checked>
+		<input type="checkbox" id="settings_highlight_line">
 	      </td>
 	    </tr>
 	    <tr>
 	      <td >
-		<label for="show_whitespace">Show whitespace</label>
+		<label for="settings_show_whitespace">Show whitespace</label>
 	      </td><td>
-		<input type="checkbox" name="show_whitespace" id="show_whitespace" checked>
+		<input type="checkbox" id="settings_show_whitespace">
 	      </td>
 	    </tr>
 	    <tr>
 	      <td >
-		<label for="show_line_numbers">Line numbers</label>
+		<label for="settings_line_numbers">Line numbers</label>
 	      </td><td>
-		<input type="checkbox" id="show_line_numbers" checked>
+		<input type="checkbox" id="settings_line_numbers">
 	      </td>
 	    </tr>
 	    <tr>
 	      <td >
-		<label for="show_col_80">Show line margin</label>
+		<label for="settings_show_col_80">Mark column 80</label>
 	      </td><td>
-		<input type="checkbox" id="show_col_80" checked>
+		<input type="checkbox" id="settings_show_col_80">
 	      </td>
 	    </tr>
 	  </table>
@@ -146,13 +144,10 @@
 
 
 <script>
+  SagePad.setScriptRoot({{ request.script_root|tojson|safe }});
+  jQuery("#flashes").delay(3000).slideUp(1000, SagePad.resize);
   SagePad.initEditor("editor");
   SagePad.initOutput("output");
   SagePad.initSettings("settings");
 </script>
-
-
-
-
-
 {% endblock %}
