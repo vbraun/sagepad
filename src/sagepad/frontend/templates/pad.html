@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+
+
+{% block menu %}
+{% if logged_in %}
+<li><a href="/">File</a>
+  <ul>
+    <li><a href="{{ new_url }}" class="require_save">New</a></li>
+    <li><a href="{{ load_url }}" class="require_save">Load</a></li>
+    <li><a href="#" id="menu_save" class="require_save">Save</a></li>
+  </ul>
+</li>
+{% else %}
+<li><a href="{{ login_url }}">File</a>
+  <ul>
+    <li><a href="{{ login_url }}">Login to load/save</a></li>
+  </ul>
+</li>
+{% endif %}
+<li><a href="#" id="evaluate">Run</a>
+  <ul>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="sage"/>Sage</a></li>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="python"/>Python</a></li>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="gap"/>GAP</a></li>
+    <li><a href="#" class="evaluate_link"><input type="radio" value="singular"/>Singular</a></li>
+  </ul>
+</li>
+<li><a href="#" id="menu_settings">Settings</a></li>
+<li><a href="{{ about_url }}" class="require_save">About</a></li>
+{% endblock %}
+
+
+
+{% block content %}
+<div id="editor">Loading input...</div>
+<div id="output">Loading output...</div>
+
+<div id="settings" title="Settings">
+  <form>
+    <table id="controls">
+      <tr>
+	<td >
+          <label for="settings_theme">Theme</label>
+	</td><td>
+          <select id="settings_theme" size="1">
+            <option value="ace/theme/chrome">Chrome</option>
+            <option value="ace/theme/clouds">Clouds</option>
+            <option value="ace/theme/clouds_midnight">Clouds Midnight</option>
+            <option value="ace/theme/cobalt">Cobalt</option>
+            <option value="ace/theme/crimson_editor">Crimson Editor</option>
+            <option value="ace/theme/dawn">Dawn</option>
+            <option value="ace/theme/dreamweaver">Dreamweaver</option>
+            <option value="ace/theme/eclipse">Eclipse</option>
+            <option value="ace/theme/idle_fingers">idleFingers</option>
+            <option value="ace/theme/kr_theme">krTheme</option>
+            <option value="ace/theme/merbivore">Merbivore</option>
+            <option value="ace/theme/merbivore_soft">Merbivore Soft</option>
+            <option value="ace/theme/mono_industrial">Mono Industrial</option>
+            <option value="ace/theme/monokai">Monokai</option>
+            <option value="ace/theme/pastel_on_dark">Pastel on dark</option>
+            <option value="ace/theme/solarized_dark">Solarized Dark</option>
+            <option value="ace/theme/solarized_light">Solarized Light</option>
+            <option value="ace/theme/textmate">TextMate</option>
+            <option value="ace/theme/twilight">Twilight</option>
+            <option value="ace/theme/tomorrow">Tomorrow</option>
+            <option value="ace/theme/tomorrow_night">Tomorrow Night</option>
+            <option value="ace/theme/tomorrow_night_blue">Tomorrow Night Blue</option>
+            <option value="ace/theme/tomorrow_night_bright">Tomorrow Night Bright</option>
+            <option value="ace/theme/tomorrow_night_eighties">Tomorrow Night 80s</option>
+            <option value="ace/theme/vibrant_ink">Vibrant Ink</option>
+          </select>
+	</td>
+      </tr>
+      <tr>
+	<td>
+          <label for="settings_fontsize">Font size</label>
+	</td><td>
+          <select id="settings_fontsize" size="1">
+            <option value="x-small">Extra small</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="x-large">Extra large</option>
+          </select>
+	</td>
+      </tr>
+      <tr>
+	<td>
+          <label for="settings_folding">Code folding</label>
+	</td><td>
+          <select id="settings_folding" size="1">
+            <option value="ace">Manual</option>
+            <option value="markbegin">Mark begin</option>
+            <option value="markbeginend">Mark begin and end</option>
+          </select>
+	</td>
+      </tr>
+      <tr>
+	<td >
+          <label for="settings_keybinding">Key bindings</label>
+	</td><td>
+          <select id="settings_keybinding" size="1">
+            <option value="keybinding">Ace</option>
+            <option value="vim">Vim</option>
+            <option value="emacs">Emacs</option>
+          </select>
+	</td>
+      </tr>
+      <tr><td colspan="2">
+	  <table id="more-controls">
+	    <tr>
+	      <td>
+		<label for="settings_highlight_line">Highlight current line</label>
+	      </td><td>
+		<input type="checkbox" id="settings_highlight_line">
+	      </td>
+	    </tr>
+	    <tr>
+	      <td >
+		<label for="settings_show_whitespace">Show whitespace</label>
+	      </td><td>
+		<input type="checkbox" id="settings_show_whitespace">
+	      </td>
+	    </tr>
+	    <tr>
+	      <td >
+		<label for="settings_line_numbers">Line numbers</label>
+	      </td><td>
+		<input type="checkbox" id="settings_line_numbers">
+	      </td>
+	    </tr>
+	    <tr>
+	      <td >
+		<label for="settings_show_col_80">Mark column 80</label>
+	      </td><td>
+		<input type="checkbox" id="settings_show_col_80">
+	      </td>
+	    </tr>
+	  </table>
+      </td></tr>
+    </table>
+  </form>
+</div>
+
+
+<script>
+  SagePad.setScriptRoot({{ request.script_root|tojson|safe }});
+  SagePad.setTitle("{{ title }}");
+  jQuery("#flashes").delay(3000).slideUp(1000, SagePad.resize);
+  SagePad.initEditor("editor", "{{ pad_id }}");
+  SagePad.initOutput("output");
+  SagePad.initSettings("settings");
+</script>
+{% endblock %}

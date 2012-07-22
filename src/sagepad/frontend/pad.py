@@ -2,7 +2,7 @@
 The input/output data in a pad
 """
 
-from pymongo import Connection
+from pymongo import Connection, DESCENDING
 from pymongo.objectid import ObjectId
 from datetime import datetime
 
@@ -17,6 +17,7 @@ Untitled pad
 Add some description here.
 '''
 
+# press Ctrl-Enter to evaluate!
 print 'Hello, world!'
 """
 
@@ -45,10 +46,10 @@ class Pad(object):
             self._mtime  = data['mtime']
         except KeyError:
             pass
-        self.save()
 
     def save(self):
         self._mtime = datetime.utcnow()
+        self._title = self._guess_title()
         pad = {'openid'   : self._openid, 
                'input'    : self._input, 
                'output'   : self._output, 
@@ -63,6 +64,12 @@ class Pad(object):
         else:
             criterion = {'_id' : self._id}
             db.update(criterion, pad)
+
+    def erase(self):
+        if self._id is None:
+            return
+        db = Pad.get_database()
+        db.remove({'_id' : self._id})
 
     @staticmethod
     def make(openid, pad_input=None, pad_output=None, 
@@ -83,17 +90,36 @@ class Pad(object):
         pad.save()
         return pad
 
+    def is_default(self):
+        global default_input
+        return self._input == default_input
+
     @staticmethod
     def lookup(pad_id):
         """
         Find the pad with given id in the database
         """
+        if isinstance(pad_id, basestring):
+            pad_id = ObjectId(pad_id)
         db = Pad.get_database()
-        data = db.find_one({'_id' :  ObjectId(pad_id)})
+        data = db.find_one({'_id' :  pad_id})
         if data is None:
             return None
         else:
             return Pad(data)
+
+    @staticmethod
+    def iterate(user, limit=None):
+        """
+        Iterate over the pads with given id in the database
+        """
+        db = Pad.get_database()
+        for data in db.find({'openid' :  user.get_id()}).sort('mtime', DESCENDING):
+            yield Pad(data)
+            if limit is not None:
+                limit -= 1
+                if limit == 0:
+                    return
 
     @staticmethod
     def get_database():
@@ -129,8 +155,25 @@ class Pad(object):
             "  return maximum;"
             "}")
         return Pad.get_database().map_reduce(get_pad_id, find_max)
-        
 
+    def _guess_title(self):
+        """
+        Guess the title from the module docstring or comment
+        """
+        fluff = [ '#', '//', '/*', '"""', "'''" ]
+        found_fluff = False
+        for line in self.get_input().splitlines():
+            line.strip()
+            for s in fluff:
+                if line.startswith(s):
+                    line = line[len(s):]
+                    found_fluff = True
+                line.strip()
+            if line == '' or not found_fluff:
+                continue
+            return line
+        return 'Untitled pad'
+        
 
     def may_view(self, user):
         """
@@ -145,7 +188,16 @@ class Pad(object):
         return self._openid == user.get_id()
 
     def get_id(self):
-        return self._pad_id
+        """
+        Returns the mongo object id
+        """
+        return self._id
+
+    def get_id_str(self):
+        """
+        Returns the mongo object id as string
+        """
+        return str(self._id)
 
     def get_ctime(self):
         return self._ctime
@@ -162,7 +214,6 @@ class Pad(object):
         time = self._mtime
         now = datetime.utcnow()
         diff = now - time 
-        print time, diff
         second_diff = diff.seconds
         day_diff = diff.days
         if day_diff < 0:

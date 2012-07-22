@@ -15,16 +15,22 @@
   <thead>
     <tr>
       <th>Title</th>
-      <th>Saved</th>
+      <th>Last seen</th>
       <th>Action</th>
     </tr>
   </thead>
   <tbody>
     {% for pad in pads %}
     <tr>
-      <td class="title">{{ pad.get_title() }}</td>
+      <td class="title">
+	<a href="{{ url_for('pad', pad_id=pad.get_id_str()) }}">{{ pad.get_title() }}</a>
+      </td>
       <td>{{ pad.pretty_mtime() }}</td>
-      <td>Del</td>
+      <td class="icon">
+	<a href="{{ url_for('delete_pad', pad_id=pad.get_id_str()) }}">
+	  <img src="{{ url_for('static', filename='icons/trash.png') }}" alt="delete"/>
+	</a>
+      </td>
     </tr>
     {% endfor %}
   </tbody>

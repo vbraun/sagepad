@@ -3,6 +3,8 @@ User data
 """
 
 from pymongo import Connection
+from pymongo.objectid import ObjectId
+from pad import Pad
 
 
 # always use User.get_database() to access the db
@@ -21,9 +23,10 @@ class User(object):
         except KeyError:
             self._email = None
         try:
-            self._pad_id = data['pad_id']
+            self._current_pad_id = data['pad_id']
         except KeyError:
-            self._pad_id = None
+            self._current_pad_id = None
+        self._current_pad = None
         self._is_suspended = False
 
     @staticmethod
@@ -75,7 +78,7 @@ class User(object):
                 'fullname' : self._fullname, 
                 'nickname' : self._nickname,
                 'email'    : self._email,
-                'pad_id'   : self._pad_id }
+                'pad_id'   : self._current_pad_id }
         User.get_database().update(criterion, user, upsert=True)
              
     def __repr__(self):
@@ -125,18 +128,47 @@ class User(object):
         """
         return self._openid
 
-    def set_pad(self, pad):
-        self._pad_id = pad._id
+    def set_current_pad(self, pad):
+        if isinstance(pad, basestring):
+            pad = ObjectId(pad)
+        if isinstance(pad, ObjectId):
+            if pad == self._current_pad_id:
+                return
+            pad = Pad.lookup(pad)
+        if pad.get_id() == self._current_pad_id:
+            return
+        self._current_pad = pad
+        self._current_pad_id = pad.get_id()
         self.save()
 
-    def get_pad(self):
-        from pad import Pad
-        try:
-            pad_id = self._pad_id
-        except AttributeError:
-            return None
+    def get_current_pad(self):
+        """
+        The current pad always exists; A new one is created if necessary.
+        """
+        if self._current_pad_id is None:
+            self._current_pad = Pad.make(self.get_id())
+            self._current_pad_id = self._current_pad.get_id()
+            self.save()
+        if self._current_pad is None:
+            pad = Pad.lookup(self._current_pad_id)
+            if pad is None:
+                pad = Pad.make(self.get_id())
+            self._current_pad = pad
+            self._current_pad_id = self._current_pad.get_id()
+            self.save()
+        return self._current_pad
+
+    def get_pad(self, pad_id):
+        if not isinstance(pad_id, ObjectId):
+            pad_id = ObjectId(pad_id)
+        if pad_id == self._current_pad_id:
+            return self.get_current_pad()
         return Pad.lookup(pad_id)
 
+    def get_all_pads(self, limit=25):
+        return list(Pad.iterate(self, limit))
+            
+        
 
 ANONYMOUS = User({'openid':None, 'fullname':'Anonymous', 'nickname':'Anonymous', 'email':None})
 

@@ -49,8 +49,23 @@ body {
 }
 
 #about {
-    background: #FFF9B8;
-    padding: 10px;
+    font-family: "Arial", sans-serif;
+    font-size: large;
+    margin: 10%;
+}
+
+#login {
+    font-family: "Arial", sans-serif;
+    font-size: large;
+    margin: 10%;
+}
+
+#login p {
+    text-align: center;
+}
+
+#login input {
+    margin: 5px;
 }
 
 .ui-widget {
@@ -72,7 +87,7 @@ body {
 {
     font-family: "Arial", sans-serif;
     font-size: medium;
-    color: #888;
+    color: #000;
     background: #fff;
     margin: 5%;
     width: 90%;
@@ -80,13 +95,22 @@ body {
     text-align: left;
 }
 
+#load tbody tr a {
+    color: #000;
+    text-decoration: none;
+}
+
 #load .title {
     font-family: "Courier", monospace;
     width: 70%;
 }
 
-#load th
-{
+#load .icon {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+#load th {
     font-size: large;
     font-weight: bold;
     color: #666;
@@ -94,13 +118,11 @@ body {
     border-bottom: 2px solid #aaa;
 }
 
-#load td
-{
-    border-bottom: 1px solid #aaa;
+#load td {
+    border-bottom: 1px solid #ccc;
     padding: 10px 10px;
 }
 
-#load tbody tr:hover td
-{
-    color: #000;
+#load tbody tr:hover td {
+    background: #ccc;
 }

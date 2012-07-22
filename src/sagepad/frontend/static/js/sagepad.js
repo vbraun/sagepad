@@ -6,11 +6,13 @@ SagePad.setScriptRoot = function(script_root) {
     self.script_root = script_root;
     self.evaluate_url = script_root + '/_eval'
     self.save_url = script_root + '/_save'
+    self.load_url = script_root + '/_load'
 }
 
 SagePad.setScriptRoot('');
 
 SagePad.editor = null;
+SagePad.pad_id = null;
 SagePad.output_css_id = '#output';
 
 SagePad.dom_editor = null;
@@ -24,6 +26,7 @@ SagePad.initOutput = function(output) {
     var self = SagePad;
     self.output_css_id = '#' + output;
     self.dom_output = jQuery(self.output_css_id)
+    self.setFontSize(self.getFontSize())
     self.setLayout(self.current_layout)
 }
 
@@ -103,6 +106,8 @@ SagePad.setFontSize = function(fontsize) {
     var self = SagePad;
     self._font_size = fontsize;
     self.dom_editor.css('font-size', fontsize);
+    if (self.dom_output != null)
+	self.dom_output.css('font-size', fontsize);
 }
 
 SagePad.getFontSize = function() {
@@ -133,9 +138,10 @@ SagePad.getKeybinding = function() {
     return self._keybinding;
 }
 
-SagePad.initEditor = function(editor_id) {
+SagePad.initEditor = function(editor_id, pad_id) {
     var self = SagePad;
     self.editor_id = editor_id;
+    self.pad_id = pad_id;
     var editor_css_id = self.editor_css_id = '#' + editor_id;
     self.dom_editor = jQuery(editor_css_id)
     var e = self.editor = ace.edit('editor');
@@ -153,11 +159,14 @@ SagePad.initEditor = function(editor_id) {
     self.setFontSize('medium');
     self.setKeybinding('emacs');
 
+    jQuery('a').bind('click', self.link_handler);
     jQuery('a#evaluate').bind('click', self.evaluate);
+    // jQuery('.require_save').bind('click', self.unload);
     jQuery('a#menu_save').bind('click', self.save);
 
     self.setLayout(self.LAYOUT_ONLY_EDITOR);
-    jQuery(window).unload(SagePad.unload);
+    jQuery(window).bind('unload', SagePad.unload);
+    self.load()
 }
 
 SagePad.resize = function() {
@@ -171,34 +180,87 @@ SagePad.evaluate = function() {
     var self = SagePad;
     self.setOutput('Please wait, computing...');
     jQuery.post(self.evaluate_url, { 
-	code: self.editor.getValue(),
+	pad_id: self.pad_id,
+    	code: self.editor.getValue(),
     }, self.evaluate_callback);
 }
 
-SagePad.save = function() {
-    var self = SagePad;
-    jQuery.post(self.save_url, { 
-	code: self.editor.getValue(),
-    });
-}
-
-SagePad.unload = function() {
-    var self = SagePad;
-    jQuery.ajaxSetup({async:false});
-    self.save();
-}
-
 SagePad.evaluate_callback = function(data) {
+    if (!data.evaluated) {
+	alert('Error evaluating pad.')
+	return;
+    }
     var self = SagePad;
     var output = data.output;
     self.setOutput(output+output+output);
 }
 
+SagePad.load = function() {
+    var self = SagePad;
+    jQuery.getJSON(self.load_url, { 
+	pad_id: self.pad_id,
+    }, self.load_callback);
+}
+
+SagePad.load_callback = function(data) {
+    if (!data.loaded) {
+	alert('Error loading data.')
+	return;
+    }
+    var self = SagePad;
+    self.setTitle(data.title);
+    self.editor.session.setValue(data.pad_input);
+    self.dom_output.text(data.pad_output);
+    console.log('load_callback: '+data.pad_id);
+}
+
+SagePad.save = function() {
+    var self = SagePad;
+    jQuery.post(self.save_url, { 
+	pad_id: self.pad_id,
+    	code: self.editor.getValue(),
+    }, self.save_callback);
+}
+
+SagePad.save_callback = function(data) {
+    if (!data.saved) {
+	alert('Error saving data.')
+	return;
+    }
+    var self = SagePad;
+    var output = data.output;
+    self.setTitle(data.title);
+    console.log('save_callback: '+data.pad_id);
+}
+
+SagePad.unload = function() {
+    console.log('unload');
+    var self = SagePad;
+    jQuery.ajaxSetup({async:false});
+    self.save();
+}
+
+SagePad.link_handler = function () {
+    var self = SagePad;
+    var href = this.href;
+    if (href[href.length-1] === '#') {
+	console.log('link handler: script')
+	return;
+    }
+    jQuery(window).unbind('unload');
+    console.log('link handler: navigate away');
+    jQuery.ajaxSetup({async:false});
+    self.save();
+}
 
 SagePad.setOutput = function(output) {
     var self = SagePad;
     self.dom_output.text(output);
     self.setLayout(self.LAYOUT_OUTPUT);
+}
+
+SagePad.setTitle = function (title) { 
+    document.title = 'SagePad - ' + title;
 }
 
 SagePad.initSettings = function(settings_id) {
