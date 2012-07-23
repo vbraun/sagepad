@@ -68,6 +68,11 @@ body {
     margin: 5px;
 }
 
+#login .error {
+    background: #ff0;
+    padding: 5px;
+}
+
 .ui-widget {
     font-size: small;
 }

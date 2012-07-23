@@ -58,6 +58,10 @@ Menu.evaluate_link = function () {
 
 
 Menu.callback = function (data) {
+    if (!data.changed) {
+	alert('Error changing setting.')
+	return;
+    }
     var self = Menu;
     self.setEvaluateRadio(data['eval_mode'])
 }

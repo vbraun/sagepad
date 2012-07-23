@@ -4,7 +4,7 @@ User data
 
 from pymongo import Connection
 from pymongo.objectid import ObjectId
-from pad import Pad
+from pad import Pad, PadException, PadInvalidId, PadReadException, PadWriteException
 
 
 # always use User.get_database() to access the db
@@ -12,12 +12,22 @@ DATABASE = None
 
 
 
+class UserException(Exception):
+    pass
+
+
+class UserInvalidId(UserException):
+    pass
+
+
+
 class User(object):
 
     def __init__(self, data):
-        self._fullname = data['fullname']
-        self._nickname = data['nickname']
-        self._openid = data['openid']
+        self._fullname  = data['fullname']
+        self._nickname  = data['nickname']
+        self._openid    = data['openid']
+        self._anonymous = data['anonymous']
         try:
             self._email = data['email']
         except KeyError:
@@ -43,10 +53,20 @@ class User(object):
     @staticmethod
     def anonymous():
         """
-        Return the anonymous user
+        Return an anonymous user
         """
-        global ANONYMOUS
-        return ANONYMOUS
+        import string
+        import random
+        openid = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(25))
+        anon = {
+            'fullname':  'Anonymous', 
+            'nickname':  'Anonymous', 
+            'email':     None,
+            'openid':    openid,
+            'anonymous': True }
+        user = User(anon)
+        user.save()
+        return user
 
     @staticmethod
     def lookup(openid):
@@ -56,18 +76,22 @@ class User(object):
         db = User.get_database()
         u = db.find_one({'openid':openid})
         if u is None:
-            return None
+            raise UserInvalidId('No user in database with specified openid')
         else:
             return User(u)
 
     @staticmethod
-    def make(self, openid, fullname, nickname, email=None):
+    def make(openid, fullname, nickname, email=None):
+        if nickname is None: 
+           nickname = fullname.split()[0]
         data = { 'openid'   : openid,
                  'fullname' : fullname,
                  'nickname' : nickname,
-                 'email'    : email }
+                 'email'    : email,
+                 'anonymous': False }
         user = User(data)
         user.save()
+        return user
 
     def save(self):
         """
@@ -78,6 +102,7 @@ class User(object):
                 'fullname' : self._fullname, 
                 'nickname' : self._nickname,
                 'email'    : self._email,
+                'anonymous': self._anonymous,
                 'pad_id'   : self._current_pad_id }
         User.get_database().update(criterion, user, upsert=True)
              
@@ -120,7 +145,7 @@ class User(object):
         Returns True if this is an anonymous user. 
         (Actual users should return False instead.)
         """
-        return self._openid is None
+        return self._anonymous
 
     def get_id(self):
         """
@@ -129,12 +154,22 @@ class User(object):
         return self._openid
 
     def set_current_pad(self, pad):
+        """
+        Set the currently active pad
+
+        INPUT: 
+
+        - ``pad`` -- a :class:`pad.Pad` or a pad id (:class:`ObjectId`
+          or string).
+
+        Throws `PadInvalidId` if ``pad`` does not exists.
+        """
         if isinstance(pad, basestring):
-            pad = ObjectId(pad)
+            pad = Pad.make_id(pad)
         if isinstance(pad, ObjectId):
             if pad == self._current_pad_id:
                 return
-            pad = Pad.lookup(pad)
+            pad = Pad.lookup(pad, self)
         if pad.get_id() == self._current_pad_id:
             return
         self._current_pad = pad
@@ -150,9 +185,10 @@ class User(object):
             self._current_pad_id = self._current_pad.get_id()
             self.save()
         if self._current_pad is None:
-            pad = Pad.lookup(self._current_pad_id)
-            if pad is None:
-                pad = Pad.make(self.get_id())
+            try:
+                pad = Pad.lookup(self._current_pad_id, self)
+            except PadInvalidId:
+                pad = Pad.make(self)
             self._current_pad = pad
             self._current_pad_id = self._current_pad.get_id()
             self.save()
@@ -160,15 +196,15 @@ class User(object):
 
     def get_pad(self, pad_id):
         if not isinstance(pad_id, ObjectId):
-            pad_id = ObjectId(pad_id)
+            pad_id = Pad.make_id(pad_id)
         if pad_id == self._current_pad_id:
             return self.get_current_pad()
-        return Pad.lookup(pad_id)
+        pad = Pad.lookup(pad_id, self)
+        return pad
 
     def get_all_pads(self, limit=25):
         return list(Pad.iterate(self, limit))
             
         
 
-ANONYMOUS = User({'openid':None, 'fullname':'Anonymous', 'nickname':'Anonymous', 'email':None})
 

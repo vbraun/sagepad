@@ -21,10 +21,12 @@
     <script src="{{ url_for('static', filename='js/ace/ace.js') }}" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/ace/keybinding-emacs.js') }}" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/ace/keybinding-vim.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='openid/js/jquery.openid.js') }}" type="text/javascript" ></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='openid/css/style.css') }}"/>
 
     {% block head %}
     <title>{% block title %}{% endblock %}</title>

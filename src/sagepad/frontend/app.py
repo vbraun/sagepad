@@ -2,8 +2,8 @@
 The main web page
 """
 
-from sagepad.frontend.user import User
-from sagepad.frontend.pad import Pad
+from sagepad.frontend.user import User, UserInvalidId
+from sagepad.frontend.pad import Pad, PadInvalidId, PadReadException, PadWriteException
 from sagepad.frontend.database import Database
 
 import flask
@@ -58,11 +58,22 @@ def lookup_current_user():
         pass
 
     # find user
-    user = None
-    if 'openid' in flask.session:
-        user = User.lookup(flask.session['openid'])
-    if user is None:
+    try:
+        openid = flask.session['openid']
+    except KeyError:
+        try:
+            openid = flask.session['anonymous_openid']
+        except KeyError:
+            openid = None
+        
+    print 'lookup: '+str(openid)
+
+    try:
+        user = User.lookup(openid)
+    except UserInvalidId:
         user = User.anonymous()
+        flask.session.pop('openid', None)
+        flask.session['anonymous_openid'] = user.get_id()
     flask.g.user = user
 
 
@@ -74,53 +85,58 @@ def login():
         return redirect(oid.get_next_url())
     if request.method == 'POST':
         openid = request.form.get('openid')
-        if openid:
+        print "got openid = "+str(openid)
+        if openid:  
             return oid.try_login(openid, ask_for=['email', 'fullname', 'nickname'])
     return render_template('login.html', next=oid.get_next_url(),
-                           error=oid.fetch_error())
+                           error=oid.fetch_error(), scroll_y=True)
 
 @oid.after_login
 def create_or_login(resp):
     openid = resp.identity_url
     print 'create_or_login', resp, openid
+    if not isinstance(openid, basestring):
+        flash(u'Incorrect or invalid OpenID, could not sign in')
+        return redirect(url_for('index'))
     flask.session['openid'] = openid
-    user = User.lookup(resp.identity_url)
-    if user is not None:
-        flash(u'Welcome back, '+user.fullname())
+    try:
+        user = User.lookup(resp.identity_url)
         flask.g.user = user
-    elif openid is None:
-        flash(u'Incorrect OpenID, could not sign in')
-        flask.g.user = User.anonymous()
-    else:
-        flash(u'Successfully signed in')
+        flash(u'Welcome back, '+user.fullname())
+    except UserInvalidId:
         print request.form
         fullname = resp.fullname
         nickname = resp.nickname
         email = resp.email
-        flask.g.user = User(openid, fullname, nickname, email)
+        user = User.make(openid, fullname, nickname, email)
+        flask.g.user = user
         flask.session.permanent = True
-    return redirect(oid.get_next_url())
+        flash(u'Thank you for signing in, '+user.fullname())
+    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     flask.session.pop('openid', None)
     flash(u'You were signed out')
-    return redirect(oid.get_next_url())
-
-#@app.route('/')
-#def index():
-#    # flash(u'index')
-#    return render_template('index.html', menu_mode='edit')
+    return redirect(url_for('index'))
 
 @app.route('/')
 def index():
-    # flash(u'index')
-    return redirect_to_pad(flask.g.user.get_current_pad())
+    user = flask.g.user
+    return redirect_to_pad(user.get_current_pad())
 
 @app.route('/pad/<pad_id>')
-def pad(pad_id):
-    # print "/pad/"+pad_id
-    flask.g.user.set_current_pad(pad_id)
+def pad(pad_id): 
+   # print "/pad/"+pad_id
+    user = flask.g.user
+    try:
+        user.set_current_pad(pad_id)
+    except PadInvalidId:
+        app.logger.debug('pad called without/wrong pad_id')
+        return redirect_to_pad(user.get_current_pad())
+    pad = user.get_current_pad()
+    if not pad.editable_by(user):
+        flash('This pad is owned by somebody else, you cannot edit it.')
     return render_template('pad.html')
 
 @app.route('/about')
@@ -136,18 +152,20 @@ def load_pad():
 def new_pad():
     user = flask.g.user
     if not user.get_current_pad().is_default():
-        pad = Pad.make(user.get_id())
+        pad = Pad.make(user)
         user.set_current_pad(pad)
     return redirect_to_pad(user.get_current_pad())
 
 @app.route('/delete/<pad_id>')
 def delete_pad(pad_id):
     user = flask.g.user
-    pad = user.get_pad(pad_id)
-    if pad is None:
-        app.logger.critical('delete called without/wrong pad_id')
-    else:
+    try:
+        pad = user.get_pad(pad_id)
         pad.erase()
+    except PadInvalidId:
+        app.logger.debug('delete called without/wrong pad_id')
+    except PadWriteException:
+        app.logger.debug('insufficient permissions to delete pad')
     return redirect(url_for('load_pad'))
 
 @app.route('/_menu', methods=['GET'])
@@ -156,9 +174,12 @@ def menu_ajax():
     eval_mode = request.args.get('eval_mode', '', type=str);
     if eval_mode == '':
         eval_mode = pad.get_eval_mode()
-    else:
+        return jsonify(changed=True, eval_mode=eval_mode)
+    try:
         pad.set_eval_mode(eval_mode)
-    return jsonify(eval_mode=eval_mode)
+        return jsonify(changed=True, eval_mode=eval_mode)
+    except PadWriteException:
+        return jsonify(changed=False)
 
 @app.route('/_save', methods=['POST'])
 def save_ajax():
@@ -172,8 +193,11 @@ def save_ajax():
         app.logger.critical('_save called without pad_id')
         return jsonify(saved=False)
     pad = flask.g.user.get_pad(pad_id)
-    pad.set_input(pad_input)
-    return jsonify(saved=True, title=pad.get_title(), pad_id=pad.get_id_str())
+    try:
+        pad.set_input(pad_input)
+        return jsonify(saved=True, title=pad.get_title(), pad_id=pad.get_id_str())
+    except PadWriteException:
+        return jsonify(saved=False)
 
 @app.route('/_load', methods=['GET'])
 def load_ajax():
@@ -182,9 +206,12 @@ def load_ajax():
     if pad_id == error_str:
         app.logger.critical('_load called without pad_id')
         return jsonify(loaded=False)
-    pad = flask.g.user.get_pad(pad_id)
-    return jsonify(loaded=True, title=pad.get_title(), pad_id=pad.get_id_str(),
-                   pad_input=pad.get_input(), pad_output=pad.get_output())
+    try:
+        pad = flask.g.user.get_pad(pad_id)
+        return jsonify(loaded=True, title=pad.get_title(), pad_id=pad.get_id_str(),
+                       pad_input=pad.get_input(), pad_output=pad.get_output())
+    except PadReadException:
+        return jsonify(loaded=False)
 
 @app.route('/_eval', methods=['POST'])
 def evaluate_ajax():
@@ -203,6 +230,10 @@ def evaluate_ajax():
     pad_output = 'Output\n'+pad_input
 
     pad = flask.g.user.get_pad(pad_id)
-    pad.set_input(pad_input)
-    pad.set_output(pad_output)
-    return jsonify(evaluated=True, output=pad_output, pad_id=pad.get_id_str())
+    try:
+        pad.set_input(pad_input)
+        pad.set_output(pad_output)
+        return jsonify(evaluated=True, output=pad_output, pad_id=pad.get_id_str())
+    except PadWriteException:
+        return jsonify(evaluated=False)
+

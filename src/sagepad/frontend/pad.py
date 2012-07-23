@@ -3,7 +3,7 @@ The input/output data in a pad
 """
 
 from pymongo import Connection, DESCENDING
-from pymongo.objectid import ObjectId
+from pymongo.objectid import ObjectId, InvalidId
 from datetime import datetime
 
 # always use Pad.get_database() to access the db
@@ -21,6 +21,28 @@ Add some description here.
 print 'Hello, world!'
 """
 
+
+
+class PadException(Exception):
+    pass
+
+class PadInvalidId(PadException):
+    """
+    The given ``pad_id`` is invalid
+    """
+    pass
+
+class PadReadException(PadException):
+    """
+    You have insufficient permissions to view pad
+    """
+    pass
+
+class PadWriteException(PadException):
+    """
+    You have insufficient permissions to modify pad
+    """
+    pass
 
 
 
@@ -46,8 +68,11 @@ class Pad(object):
             self._mtime  = data['mtime']
         except KeyError:
             pass
+        self._readonly = True
 
     def save(self):
+        if self._readonly:
+            raise PadWriteException('Cannot save, Pad is read only.')
         self._mtime = datetime.utcnow()
         self._title = self._guess_title()
         pad = {'openid'   : self._openid, 
@@ -66,6 +91,8 @@ class Pad(object):
             db.update(criterion, pad)
 
     def erase(self):
+        if self._readonly:
+            raise PadWriteException('Cannot erase, Pad is read only.')
         if self._id is None:
             return
         db = Pad.get_database()
@@ -77,6 +104,8 @@ class Pad(object):
         """
         Construct a new pad
         """
+        if not isinstance(openid, basestring):
+            openid = openid.get_id()
         if pad_input is None:
             global default_input
             pad_input = default_input
@@ -87,26 +116,40 @@ class Pad(object):
                    'mode'   : mode,
                    'public' : public,
                    'ctime'  : datetime.utcnow()})
+        pad._readonly = False
         pad.save()
         return pad
+
+    @staticmethod
+    def make_id(pad_id):
+        """
+        Construct a the pad_id from a string
+        """
+        try:
+            return ObjectId(pad_id)
+        except InvalidId:
+            raise PadInvalidId('The pad_id is not valid.')
 
     def is_default(self):
         global default_input
         return self._input == default_input
 
     @staticmethod
-    def lookup(pad_id):
+    def lookup(pad_id, user):
         """
         Find the pad with given id in the database
         """
-        if isinstance(pad_id, basestring):
-            pad_id = ObjectId(pad_id)
+        if not isinstance(pad_id, ObjectId):
+            pad_id = Pad.make_id(pad_id)
         db = Pad.get_database()
         data = db.find_one({'_id' :  pad_id})
         if data is None:
-            return None
-        else:
-            return Pad(data)
+            raise PadInvalidId('The pad ID does not exist.')
+        pad = Pad(data)
+        if not pad.viewable_by(user):
+            raise PadReadException('No read permission for pad')
+        pad._readonly = not pad.editable_by(user)
+        return pad
 
     @staticmethod
     def iterate(user, limit=None):
@@ -175,13 +218,13 @@ class Pad(object):
         return 'Untitled pad'
         
 
-    def may_view(self, user):
+    def viewable_by(self, user):
         """
         Whether the user may view the pad
         """
         return True
 
-    def may_edit(self, user):
+    def editable_by(self, user):
         """
         Whether the user may edit the pad
         """

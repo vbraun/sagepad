@@ -4,15 +4,34 @@
 
 {% block content %}
 <div id="login">
+
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}</p>{% endif %}
+    
   <h1>Sign in</h1>
-  <form action="" method=post>
-    {% if error %}<p class=error><strong>Error:</strong> {{ error }}</p>{% endif %}
+
+  <h2>using your OpenID:</h2>
+
+  <form action="" method="post">
     <p>
       <label for="openid">OpenID:&nbsp;</label>
       <input type="text" name="openid" style="width:500px">
       <input type="submit" value="Sign in">
       <input type="hidden" name="next" value="{{ next }}">
+    </p>
   </form>
+
+  <h2>or using an ID provider:</h2>
+
+  <form method="post" action="" id="openid">
+    <input type="hidden" name="next" value="{{ next }}">
+  </form>
+  
+  <script type="text/javascript">
+    jQuery("#openid").openid({
+    img_path: "{{ url_for('static', filename='openid/img/') }}",
+    });
+  </script>
+  
 </div>
 
 {% endblock %}
