@@ -4,7 +4,9 @@ var SagePad = SagePad || {};
 SagePad.setScriptRoot = function(script_root) {
     var self = SagePad;
     self.script_root = script_root;
-    self.evaluate_url = script_root + '/_eval'
+    self.evaluate_initiation_url = script_root + '/_eval'
+    self.evaluate_continuation_url = script_root + '/_cont'
+    self.evaluate_stop_url = script_root + '/_stop'
     self.save_url = script_root + '/_save'
     self.load_url = script_root + '/_load'
 }
@@ -179,20 +181,38 @@ SagePad.resize = function() {
 SagePad.evaluate = function() {
     var self = SagePad;
     self.setOutput('Please wait, computing...');
-    jQuery.post(self.evaluate_url, { 
+    jQuery.post(self.evaluate_initiation_url, { 
 	pad_id: self.pad_id,
     	code: self.editor.getValue(),
-    }, self.evaluate_callback);
+    }, self.evaluate_initiation_callback);
 }
 
-SagePad.evaluate_callback = function(data) {
-    if (!data.evaluated) {
-	alert('Error evaluating pad.')
+SagePad.evaluate_initiation_callback = function(data) {
+    if (!data.initiated) {
+	alert('Error evaluating pad: '+data.output)
 	return;
     }
     var self = SagePad;
-    var output = data.output;
-    self.setOutput(output+output+output);
+    self.setOutput(data.output);
+    jQuery.getJSON(self.evaluate_continuation_url, { 
+	counter: 0,
+	pad_id: data.pad_id,
+	task_id: data.task_id,
+    }, self.evaluate_continuation_callback);
+}
+
+SagePad.evaluate_continuation_callback = function(data) {
+    var self = SagePad;
+    self.setOutput(data.output);
+    if (!data.finished){ 
+	window.setTimeout( function() {
+	    jQuery.getJSON(self.evaluate_continuation_url, { 
+		counter: data.counter,
+		pad_id: data.pad_id,
+		task_id: data.task_id,
+	    }, self.evaluate_continuation_callback);
+	}, 100);
+    }
 }
 
 SagePad.load = function() {

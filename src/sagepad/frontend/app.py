@@ -6,6 +6,8 @@ from sagepad.frontend.user import User, UserInvalidId
 from sagepad.frontend.pad import Pad, PadInvalidId, PadReadException, PadWriteException
 from sagepad.frontend.database import Database
 
+from sagepad.backend.tasks import evaluate_sage
+
 import flask
 from flask import Flask, request, redirect, url_for, flash, jsonify, escape
 
@@ -56,7 +58,6 @@ def lookup_current_user():
         return
     except AttributeError:
         pass
-
     # find user
     try:
         openid = flask.session['openid']
@@ -65,9 +66,7 @@ def lookup_current_user():
             openid = flask.session['anonymous_openid']
         except KeyError:
             openid = None
-        
-    print 'lookup: '+str(openid)
-
+    #print 'lookup: '+str(openid)
     try:
         user = User.lookup(openid)
     except UserInvalidId:
@@ -170,9 +169,9 @@ def delete_pad(pad_id):
 
 @app.route('/_menu', methods=['GET'])
 def menu_ajax():
-    pad = flask.g.pad
-    eval_mode = request.args.get('eval_mode', '', type=str);
-    if eval_mode == '':
+    pad = flask.g.user.get_current_pad()
+    eval_mode = request.args.get('eval_mode', None, type=str);
+    if eval_mode is None:
         eval_mode = pad.get_eval_mode()
         return jsonify(changed=True, eval_mode=eval_mode)
     try:
@@ -183,13 +182,12 @@ def menu_ajax():
 
 @app.route('/_save', methods=['POST'])
 def save_ajax():
-    error_str = 'Error, no code'
-    pad_input = request.form.get('code', error_str, type=str)
-    if pad_input == error_str:
+    pad_input = request.form.get('code', None, type=str)
+    if pad_input is None:
         app.logger.critical('_save called without handing over input code')
         return jsonify(saved=False)
-    pad_id    = request.form.get('pad_id', error_str, type=str)
-    if pad_id == error_str:
+    pad_id    = request.form.get('pad_id', None, type=str)
+    if pad_id is None:
         app.logger.critical('_save called without pad_id')
         return jsonify(saved=False)
     pad = flask.g.user.get_pad(pad_id)
@@ -201,9 +199,8 @@ def save_ajax():
 
 @app.route('/_load', methods=['GET'])
 def load_ajax():
-    error_str = 'Error, no id'
-    pad_id    = request.args.get('pad_id', error_str, type=str)
-    if pad_id == error_str:
+    pad_id = request.args.get('pad_id', None, type=str)
+    if pad_id is None:
         app.logger.critical('_load called without pad_id')
         return jsonify(loaded=False)
     try:
@@ -214,26 +211,65 @@ def load_ajax():
         return jsonify(loaded=False)
 
 @app.route('/_eval', methods=['POST'])
-def evaluate_ajax():
-    import time
-    time.sleep(1)
-    error_str = 'Error, no code'
-    pad_input = request.form.get('code', error_str, type=str)
-    if pad_input == error_str:
-        app.logger.critical('_eval called without code')        
-        return jsonify(evaluated=False)
-    pad_id = request.form.get('pad_id', error_str, type=str)
-    if pad_id == error_str:
-        app.logger.critical('_eval called without pad_id')
-        return jsonify(evaluated=False)
+def evaluate_initiation_ajax():
+    """
+    First half of evaluation: Start the Celery task
+    """
+    pad_input = request.form.get('code', None, type=str)
+    if pad_input is None:
+        msg = '_eval called without code'
+        app.logger.critical(msg)        
+        return jsonify(initiated=False, output=msg)
+    pad_id = request.form.get('pad_id', None, type=str)
+    if pad_id is None:
+        msg = '_eval called without pad_id'
+        app.logger.critical(msg)
+        return jsonify(initiated=False, output=msg)
 
-    pad_output = 'Output\n'+pad_input
-
+    task = evaluate_sage.delay(pad_input)
     pad = flask.g.user.get_pad(pad_id)
     try:
         pad.set_input(pad_input)
-        pad.set_output(pad_output)
-        return jsonify(evaluated=True, output=pad_output, pad_id=pad.get_id_str())
-    except PadWriteException:
-        return jsonify(evaluated=False)
+        return jsonify(initiated=True, 
+                       output='Evaluating ...',
+                       task_id=task.task_id, 
+                       pad_id=pad.get_id_str())
+    except PadWriteException, msg:
+        return jsonify(initiated=False, output=msg)
 
+
+@app.route('/_cont', methods=['GET'])
+def evaluate_continuation_ajax():
+    """
+    Second half of evaluation: Poll output of celery task
+    """
+    task_id = request.args.get('task_id', None, type=str)
+    if task_id is None:
+        msg = '_cont called without task_id'
+        app.logger.critical(msg)        
+        return jsonify(finished=True, pad_id=pad_id, output=msg)
+
+    pad_id = request.args.get('pad_id', None, type=str)
+    if pad_id is None:
+        msg = '_cont called without pad_id'
+        app.logger.critical(msg)
+        return jsonify(finished=True, pad_id=pad_id, output=msg)
+
+    counter = request.args.get('counter', None, type=int)
+    if counter is None:
+        msg = '_cont called without counter'
+        app.logger.critical(msg)
+        return jsonify(finished=True, pad_id=pad_id, output=msg)
+
+    task = evaluate_sage.AsyncResult(task_id)
+    if not task.ready():
+        return jsonify(finished=False, pad_id=pad_id, task_id=task_id, 
+                       counter=counter+1, output='Still evaluating ... '+str(counter))
+        
+    pad_output = task.get()
+    pad = flask.g.user.get_pad(pad_id)
+    try:
+        pad.set_output(pad_output)
+        return jsonify(finished=True, output=pad_output, pad_id=pad_id)
+    except PadWriteException, msg:
+        return jsonify(finished=True, output=msg, pad_id=pad_id)

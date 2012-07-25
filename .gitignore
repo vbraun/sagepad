@@ -2,5 +2,6 @@
 *.pyc
 \#*\#
 .\#*
+bin/python
 data-openid
 ThirdParty

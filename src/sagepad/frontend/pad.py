@@ -3,7 +3,7 @@ The input/output data in a pad
 """
 
 from pymongo import Connection, DESCENDING
-from pymongo.objectid import ObjectId, InvalidId
+from bson.objectid import ObjectId, InvalidId
 from datetime import datetime
 
 # always use Pad.get_database() to access the db

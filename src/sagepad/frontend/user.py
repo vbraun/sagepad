@@ -3,7 +3,7 @@ User data
 """
 
 from pymongo import Connection
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 from pad import Pad, PadException, PadInvalidId, PadReadException, PadWriteException
 
 
