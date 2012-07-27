@@ -34,17 +34,19 @@ virt-install --name=vm --cpuset=2 --ram=1024 \
   --noautoconsole --location /var/www/html/CentOS
   --extra-args "ks=http://192.168.1.1/ks.cfg"
 
+
+
 export NAME=fedora-base
 export UUID=`uuidgen`
 sudo virt-install --connect qemu:///system \
      --name $NAME \
      --ram 512 --vcpus=2 --uuid=$UUID \
      --disk path=/var/lib/libvirt/images/$NAME.img,size=5 \
-     --location src/Fedora-17-x86_64-DVD/ \
-     --initrd-inject scripts/f17-base.ks \
-     --extra-args "ks=file:/f17-base.ks" \
+     --location /home/vbraun/Virtual/SagePad/src/Fedora-17-x86_64-DVD/ \
+     --initrd-inject kickstart/fedora-base.ks \
+     --extra-args "ks=file:/fedora-base.ks console=tty0 console=ttyS0,115200" \
      --os-type=linux --os-variant=fedora17 --graphics none --hvm \
-     --network=network:kvm-nat,mac:54:52:00:00:10:00 --hvm
+     --network network=kvm-nat,mac=54:52:00:00:10:00 --hvm
 
 
      --cdrom=/home/vbraun/Virtual/iso/Fedora-17-x86_64-DVD.iso \
