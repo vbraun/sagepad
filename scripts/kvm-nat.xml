@@ -1,0 +1,16 @@
+<network>
+  <name>kvm-nat</name>
+  <forward mode='nat'/>
+  <bridge name='kvm-nat' stp='on' delay='0' />
+  <ip address='192.168.123.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.123.2' end='192.168.123.254' />
+      <host mac='54:52:00:00:10:00' ip='192.168.123.10' name='base'/>
+      <host mac='54:52:00:00:10:01' ip='192.168.123.11' />
+      <host mac='54:52:00:00:10:02' ip='192.168.123.12' />
+      <host mac='54:52:00:00:10:03' ip='192.168.123.13' />
+      <host mac='54:52:00:00:10:04' ip='192.168.123.14' />
+      <host mac='54:52:00:00:10:05' ip='192.168.123.15' />
+    </dhcp>
+  </ip>
+</network>

@@ -1,0 +1,50 @@
+
+yum update
+yum install kernel kernel-devel kernel-headers emacs-nox policycoreutils-python system-config-users xorg-x11-xauth openssh-clients genisoimage
+
+
+# to be able to compile Sage
+yum install gcc gcc-gfortran gcc-c++ m4 perl ranlib ImageMagick atlas atlas-devel mercurial
+
+
+# fedora kernel
+mv /etc/grub.d/06_OVHkernel  /etc/grub.d/16_OVHkernel
+grub2-mkconfig -o /boot/grub2/grub.cfg
+grub2-set-default Fedora
+grub2-editenv list
+
+
+
+1. Set selinux to permissive (/etc/config/selinux)
+2. reboot
+3. grep "SELinux is preventing" /var/log/messages
+4. Set selinux to enforcing (/etc/config/selinux)
+5. reboot
+
+
+
+
+
+yum -y groupinstall Virtualization "Virtualization Client" "Virtualization Platform" "Virtualization Tools" 
+yum -y install libguestfs-tools
+
+virt-install --name=vm --cpuset=2 --ram=1024 \
+  --network bridge=br0 --disk=/dev/mapper/sysvg-vm--root
+  --disk=/dev/mapper/sysvg-vm--swap --vnc --vnclisten=0.0.0.0
+  --noautoconsole --location /var/www/html/CentOS
+  --extra-args "ks=http://192.168.1.1/ks.cfg"
+
+export NAME=fedora-base
+export UUID=`uuidgen`
+sudo virt-install --connect qemu:///system \
+     --name $NAME \
+     --ram 512 --vcpus=2 --uuid=$UUID \
+     --disk path=/var/lib/libvirt/images/$NAME.img,size=5 \
+     --location src/Fedora-17-x86_64-DVD/ \
+     --initrd-inject scripts/f17-base.ks \
+     --extra-args "ks=file:/f17-base.ks" \
+     --os-type=linux --os-variant=fedora17 --graphics none --hvm \
+     --network=network:kvm-nat,mac:54:52:00:00:10:00 --hvm
+
+
+     --cdrom=/home/vbraun/Virtual/iso/Fedora-17-x86_64-DVD.iso \
