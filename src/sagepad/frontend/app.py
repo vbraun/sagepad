@@ -159,8 +159,7 @@ def new_pad():
 def delete_pad(pad_id):
     user = flask.g.user
     try:
-        pad = user.get_pad(pad_id)
-        pad.erase()
+        user.erase(pad_id)
     except PadInvalidId:
         app.logger.debug('delete called without/wrong pad_id')
     except PadWriteException:
@@ -206,7 +205,7 @@ def load_ajax():
     try:
         pad = flask.g.user.get_pad(pad_id)
         return jsonify(loaded=True, title=pad.get_title(), pad_id=pad.get_id_str(),
-                       pad_input=pad.get_input(), pad_output=pad.get_output())
+                       pad_input=pad.get_input(), pad_output=pad.get_output().html())
     except PadReadException:
         return jsonify(loaded=False)
 

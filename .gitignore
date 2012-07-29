@@ -2,6 +2,8 @@
 *.pyc
 \#*\#
 .\#*
+secure/flask_config.py
+secure/celery_config.py
 bin/python
 data-openid
 ThirdParty

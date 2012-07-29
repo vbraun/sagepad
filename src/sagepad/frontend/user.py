@@ -181,7 +181,11 @@ class User(object):
         The current pad always exists; A new one is created if necessary.
         """
         if self._current_pad_id is None:
-            self._current_pad = Pad.make(self.get_id())
+            cursor = Pad.iterate(self, 1)
+            try:
+                self._current_pad = cursor.next()
+            except StopIteration:
+                self._current_pad = Pad.make(self.get_id())
             self._current_pad_id = self._current_pad.get_id()
             self.save()
         if self._current_pad is None:
@@ -204,7 +208,13 @@ class User(object):
 
     def get_all_pads(self, limit=25):
         return list(Pad.iterate(self, limit))
-            
+
+    def erase(self, pad_id):
+        pad = self.get_pad(pad_id)
+        pad.erase()
+        if pad.get_id() == self._current_pad_id:
+            self._current_pad = self._current_pad_id = None
+            self.save()
         
 
 

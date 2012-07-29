@@ -6,6 +6,9 @@ from pymongo import Connection, DESCENDING
 from bson.objectid import ObjectId, InvalidId
 from datetime import datetime
 
+from pad_output import PadOutput
+
+
 # always use Pad.get_database() to access the db
 DATABASE = None
 
@@ -46,6 +49,10 @@ class PadWriteException(PadException):
 
 
 
+
+
+
+
 class Pad(object):
     
     def __init__(self, data):
@@ -53,21 +60,15 @@ class Pad(object):
         The Python constructor. You should use :meth:`make` or
         :meth:`lookup` to construct instances.
         """
-        try:
-            self._id = data['_id']
-        except KeyError:
-            self._id = None
+        self._id     = data.get('_id', None)
         self._openid = data['openid']
         self._input  = data['input']
-        self._output = data['output']
+        self._output = PadOutput(data['output'])
         self._title  = data['title']
         self._mode   = data['mode']
         self._public = data['public']
         self._ctime  = data['ctime']
-        try: 
-            self._mtime  = data['mtime']
-        except KeyError:
-            pass
+        self._mtime  = data.get('mtime', None)
         self._readonly = True
 
     def save(self):
@@ -77,7 +78,7 @@ class Pad(object):
         self._title = self._guess_title()
         pad = {'openid'   : self._openid, 
                'input'    : self._input, 
-               'output'   : self._output, 
+               'output'   : self._output.to_dict(),
                'title'    : self._title,
                'mode'     : self._mode,
                'public'   : self._public,
@@ -109,6 +110,8 @@ class Pad(object):
         if pad_input is None:
             global default_input
             pad_input = default_input
+        if pad_output is None:
+            pad_output = PadOutputNone_class()
         pad = Pad({'openid' : openid, 
                    'input'  : pad_input,
                    'output' : pad_output,
@@ -305,7 +308,7 @@ class Pad(object):
         return self._output
 
     def set_output(self, output):
-        self._output = output
+        self._output = PadOutput(output)
         self._mtime = datetime.utcnow()
         self.save()
 
