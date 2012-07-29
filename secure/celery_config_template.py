@@ -1,0 +1,4 @@
+CELERY_RESULT_BACKEND = 'mongodb'
+CELERY_TASK_SERIALIZER='json'
+
+
