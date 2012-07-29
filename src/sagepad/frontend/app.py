@@ -4,7 +4,6 @@ The main web page
 
 from sagepad.frontend.user import User, UserInvalidId
 from sagepad.frontend.pad import Pad, PadInvalidId, PadReadException, PadWriteException
-from sagepad.frontend.database import Database
 
 from sagepad.backend.tasks import evaluate_sage
 
