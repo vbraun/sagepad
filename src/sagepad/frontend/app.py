@@ -4,6 +4,7 @@ The main web page
 
 from sagepad.frontend.user import User, UserInvalidId
 from sagepad.frontend.pad import Pad, PadInvalidId, PadReadException, PadWriteException
+from sagepad.frontend.reverse_proxy import ReverseProxied
 
 from sagepad.backend.tasks import evaluate_sage
 
@@ -14,6 +15,8 @@ from flaskext.openid import OpenID
 
 
 app = Flask(__name__)
+app.wsgi_app = ReverseProxied(app.wsgi_app)
+
 oid = OpenID(app, 'data-openid')
 
 
