@@ -111,7 +111,7 @@ class Pad(object):
             global default_input
             pad_input = default_input
         if pad_output is None:
-            pad_output = PadOutputNone_class()
+            pad_output = PadOutput()
         pad = Pad({'openid' : openid, 
                    'input'  : pad_input,
                    'output' : pad_output,

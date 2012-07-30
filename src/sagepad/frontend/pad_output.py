@@ -1,11 +1,14 @@
 
 
-def PadOutput(data):
+def PadOutput(data=None):
     """
     Recreated the pad output from a dictionary
     """
-    if not isinstance(data, dict):
-        data = {'data': str(data), 'mime': 'text/plain'}
+    from mime_type import MimeTypes
+    if data is None:
+        data = {'data': None, 'mime': str(MimeTypes.APP_UNKNOWN)}
+    elif not isinstance(data, dict):
+        data = {'data': str(data), 'mime': str(MimeTypes.TEXT_PLAIN)}
     from mime_type import MimeType
     mime = MimeType(data['mime'])
     pad_output = mime.make_pad_output(data)
