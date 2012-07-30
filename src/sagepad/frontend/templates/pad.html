@@ -3,7 +3,7 @@
 
 {% block menu %}
 {% if logged_in %}
-<li><a href="/">File</a>
+<li><a href="{{ home_url }}">File</a>
   <ul>
     <li><a href="{{ new_url }}" class="require_save">New</a></li>
     <li><a href="{{ load_url }}" class="require_save">Load</a></li>

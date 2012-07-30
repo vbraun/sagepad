@@ -40,31 +40,14 @@
     <ul id="menu">
       {% block menu %}{% endblock %}
 
-
-      <!-- {% if menu_mode == "default" %} -->
-      <!-- {% if logged_in %} -->
-      <!-- <li><a href="/">File</a> -->
-      <!--   <ul> -->
-      <!--     <li><a href="{{ load_url }}">Load</a></li> -->
-      <!--   </ul> -->
-      <!-- </li> -->
-      <!-- {% else %} -->
-      <!-- <li><a href="{{ login_url }}">File</a> -->
-      <!--   <ul> -->
-      <!--     <li><a href="{{ login_url }}">Login to load/save</a></li> -->
-      <!--   </ul> -->
-      <!-- </li> -->
-      <!-- {% endif %} -->
-      <!-- {% endif %} -->
-
       {% if logged_in %}
-      <li class="right"><a href="/">{{ nickname }}</a>
+      <li class="right"><a href="{{ home_url }}">{{ nickname }}</a>
         <ul>
           <li><a href="{{ logout_url }}">Logout</a></li>
         </ul>
       </li>
       {% else %}
-      <li class="right"><a href="/">Anonymous</a>
+      <li class="right"><a href="{{ home_url }}">Anonymous</a>
         <ul>
           <li><a href="{{ login_url }}">Login</a></li>
         </ul>

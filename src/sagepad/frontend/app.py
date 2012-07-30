@@ -27,6 +27,7 @@ def redirect_to_pad(pad):
 
 def render_template(*args, **kwds):
     user = flask.g.user
+    kwds['home_url']  = url_for('index')
     kwds['login_url']  = url_for('login')
     kwds['logout_url'] = url_for('logout')
     kwds['about_url']  = url_for('about')
