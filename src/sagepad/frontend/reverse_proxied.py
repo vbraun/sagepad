@@ -12,6 +12,7 @@ class ReverseProxied(object):
     than what is used locally.
 
     In nginx:
+
     location /myprefix {
         proxy_pass http://192.168.0.1:5001;
         proxy_set_header Host $host;
@@ -19,10 +20,19 @@ class ReverseProxied(object):
         proxy_set_header X-Scheme $scheme;
         proxy_set_header X-Script-Name /myprefix;
         }
+        
+    In Apache:
 
+    <VirtualHost myip:80>
+        ServerName foobar.org
+        ProxyRequests Off
+        ProxyVia Off
+        RequestHeader set X_Script_Name /myprefix
+        ProxyPass /myprefix http://frontend:8080
+        ProxyPassReverse /myprefix http://frontend:8080
+    </VirtualHost>
 
-
-   :param app: the WSGI application
+    :param app: the WSGI application
     """
     def __init__(self, app):
         self.app = app

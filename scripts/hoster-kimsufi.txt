@@ -4,7 +4,7 @@ yum install kernel kernel-devel kernel-headers emacs-nox policycoreutils-python 
 
 
 # to be able to compile Sage
-yum install gcc gcc-gfortran gcc-c++ m4 perl ranlib ImageMagick atlas atlas-devel mercurial git
+yum install gcc gcc-gfortran gcc-c++ m4 perl ranlib ImageMagick atlas atlas-devel mercurial git openssl-devel
 
 
 # fedora kernel
