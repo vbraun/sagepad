@@ -10,6 +10,6 @@ fi
 virtdir="bin/python"
 
 virtualenv "$virtdir"
-"$virtdir"/bin/pip install celery pymongo flask-openid ipython gunicorn
+"$virtdir"/bin/pip install --upgrade celery pymongo flask-openid ipython gunicorn
 
 

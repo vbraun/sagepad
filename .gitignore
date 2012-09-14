@@ -4,6 +4,7 @@
 .\#*
 secure/flask_config.py
 secure/celery_config.py
+scripts/boxgrinder
 bin/python
 data-openid
 ThirdParty
