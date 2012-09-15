@@ -37,15 +37,76 @@ body {
 #output {
     margin-top: 1px;
     background: #FFF9B8;
-    width: 100%;
+    width: auto;
     padding: 20px;
+    overflow: auto;
+}
+
+.pad_row {
+    position: relative;
+    background: #ffffff
+}
+
+.pad_IOtag {
+    clear: both;
+    float: left;
+    color: #55aa55;
+    font-size: small;
+    width: 10%;
+}
+
+.pad_input {
+    clear: both;
+    position: static;
     font-family: "Courier New", Courier, monospace;
-    font-size: 12px;
-    font-weigth: bold;
+    font-size: small;
+    word-wrap:break-word;
+    max-width: 100%;
+    color: #999999;
+}
+
+.pad_output {
+    float: left;
+    font-family: "Courier New", Courier, monospace;
+    font-weight: bolder;
+    font-size: larger;
+    width: auto;
+    word-wrap:break-word;
+    max-width: 90%;
+}
+
+.pad_type {
+    font-family: "Courier New", Courier, monospace;
+    float: right;
+    font-size: x-small;
+    color: #999999;
+}
+
+.pad_stdout {
+    clear: both;
+    position: static;
+    font-family: "Courier New", Courier, monospace;
+    font-size: large;
+    font-weight: bold;
     white-space: pre-wrap;
     white-space: -moz-pre-wrap;
     white-space: -o-pre-wrap;
     overflow: auto;
+    padding-top: 10px;
+}
+
+.pad_stderr {
+    clear: both;
+    position: static;
+    font-family: "Courier New", Courier, monospace;
+    font-weight: bold;
+    font-size: large;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -o-pre-wrap;
+    overflow: auto;
+    padding-top: 10px;
+    color: #aa0000;
 }
 
 #about {

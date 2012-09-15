@@ -9,4 +9,4 @@ from sagepad.frontend.app import app
 app.config.from_object('flask_config')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8080, host='frontend')
+    app.run(debug=True, port=8080, host='localhost')

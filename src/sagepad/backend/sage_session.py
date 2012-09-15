@@ -1,7 +1,7 @@
 """
 Sage session with enhanced output
 
-Example JSON output:
+Example dictionary output in JSON format:
 
 .. code-block:: json
     :linenos:
@@ -150,7 +150,7 @@ class SageSession(object):
         except EnvironmentError:
             pad_output = self.error_message('No output received')
         except ValueError:
-            pad_output = self.error_message('Invalid output returned')
+            pad_output = self.error_message('Evaluation unsuccessful')
         except Exception, msg:
             pad_output = self.error_message('Unknown error: '+str(msg))
         pad_output['stdout'] = self.get_stdout()
@@ -206,7 +206,7 @@ class CommandLogEntry(object):
             self._text = str(value)
             self._png = 'graphics_'+str(self.index())+'.png'
             self._mime = CommandLog.OUTPUT_PNG
-            value.save(self._png)
+            value.save(self._png, transparent=True)
         elif is_Expression(value):
             self._text = str(value)
             self._latex = str(value._latex_())

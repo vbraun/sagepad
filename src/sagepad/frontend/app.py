@@ -24,10 +24,14 @@ def redirect_to_pad(pad):
     url = url_for('pad', pad_id=str(pad.get_id()))
     return redirect(url)
 
+def redirect_to_copy_pad(pad):
+    url = url_for('copy_pad', pad_id=str(pad.get_id()))
+    return redirect(url)
+
 
 def render_template(*args, **kwds):
     user = flask.g.user
-    kwds['home_url']  = url_for('index')
+    kwds['home_url']   = url_for('index')
     kwds['login_url']  = url_for('login')
     kwds['logout_url'] = url_for('logout')
     kwds['about_url']  = url_for('about')
@@ -38,6 +42,7 @@ def render_template(*args, **kwds):
     kwds['eval_mode']  = pad.get_eval_mode()
     kwds['title']      = pad.get_title()
     kwds['pad_id']     = pad.get_id_str()
+    kwds['copy_url']   = url_for('copy_pad', pad_id=pad.get_id_str())
 
     if not kwds.has_key('scroll_y'):
         kwds['scroll_y'] = False
@@ -138,7 +143,7 @@ def pad(pad_id):
         return redirect_to_pad(user.get_current_pad())
     pad = user.get_current_pad()
     if not pad.editable_by(user):
-        flash('This pad is owned by somebody else, you cannot edit it.')
+        flash('This pad is owned by somebody else, you cannot save changes to it.')
     return render_template('pad.html')
 
 @app.route('/about')
@@ -153,10 +158,23 @@ def load_pad():
 @app.route('/new')
 def new_pad():
     user = flask.g.user
-    if not user.get_current_pad().is_default():
+    pad = user.get_current_pad()
+    if not pad.is_default():
         pad = Pad.make(user)
         user.set_current_pad(pad)
-    return redirect_to_pad(user.get_current_pad())
+    return redirect_to_pad(pad)
+
+@app.route('/copy/<pad_id>')
+def copy_pad(pad_id):
+    user = flask.g.user
+    pad = user.get_current_pad()
+    pad_input = pad.get_input()
+    pad_output = pad.get_output()
+    pad = Pad.make(user, title=pad.get_title(), mode=pad.get_eval_mode(),
+                   pad_input=pad.get_input(), pad_output=pad.get_output())
+    user.set_current_pad(pad)
+    flash('Saved an editable copy.')
+    return redirect_to_pad(pad)
 
 @app.route('/delete/<pad_id>')
 def delete_pad(pad_id):
@@ -192,12 +210,13 @@ def save_ajax():
     if pad_id is None:
         app.logger.critical('_save called without pad_id')
         return jsonify(saved=False)
-    pad = flask.g.user.get_pad(pad_id)
+    user = flask.g.user
+    pad = user.get_pad(pad_id)
     try:
         pad.set_input(pad_input)
-        return jsonify(saved=True, title=pad.get_title(), pad_id=pad.get_id_str())
     except PadWriteException:
-        return jsonify(saved=False)
+        flash('Pad is owned by somebody else, changes are not saved.')
+    return jsonify(saved=True, title=pad.get_title(), pad_id=pad.get_id_str())
 
 @app.route('/_load', methods=['GET'])
 def load_ajax():
@@ -208,7 +227,8 @@ def load_ajax():
     try:
         pad = flask.g.user.get_pad(pad_id)
         return jsonify(loaded=True, title=pad.get_title(), pad_id=pad.get_id_str(),
-                       pad_input=pad.get_input(), pad_output=pad.get_output().html())
+                       pad_input=pad.get_input(), 
+                       pad_output=pad.get_output().html())
     except PadReadException:
         return jsonify(loaded=False)
 
@@ -227,18 +247,18 @@ def evaluate_initiation_ajax():
         msg = '_eval called without pad_id'
         app.logger.critical(msg)
         return jsonify(initiated=False, output=msg)
-
     task = evaluate_sage.delay(pad_input)
-    pad = flask.g.user.get_pad(pad_id)
+    user = flask.g.user
+    pad = user.get_pad(pad_id)
     try:
         pad.set_input(pad_input)
-        return jsonify(initiated=True, 
-                       output='Evaluating ...',
-                       task_id=task.task_id, 
-                       pad_id=pad.get_id_str())
-    except PadWriteException, msg:
-        return jsonify(initiated=False, output=msg)
-
+        output='Evaluating ...'
+    except PadWriteException as e:
+        output = 'Evaluating (without saving) ...'
+    return jsonify(initiated=True, 
+                   output=output,
+                   task_id=task.task_id, 
+                   pad_id=pad.get_id_str())
 
 @app.route('/_cont', methods=['GET'])
 def evaluate_continuation_ajax():
@@ -267,11 +287,10 @@ def evaluate_continuation_ajax():
     if not task.ready():
         return jsonify(finished=False, pad_id=pad_id, task_id=task_id, 
                        counter=counter+1, output='Still evaluating ... '+str(counter))
-        
     pad_output = task.get()
     pad = flask.g.user.get_pad(pad_id)
     try:
         pad.set_output(pad_output)
-        return jsonify(finished=True, output=pad_output, pad_id=pad_id)
-    except PadWriteException, msg:
-        return jsonify(finished=True, output=msg, pad_id=pad_id)
+    except PadWriteException:
+        pass
+    return jsonify(finished=True, output=pad.get_output().html(), pad_id=pad_id)

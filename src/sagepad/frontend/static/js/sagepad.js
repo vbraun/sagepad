@@ -230,7 +230,7 @@ SagePad.load_callback = function(data) {
     var self = SagePad;
     self.setTitle(data.title);
     self.editor.session.setValue(data.pad_input);
-    self.dom_output.text(data.pad_output);
+    self.dom_output.html(data.pad_output);
     console.log('load_callback: '+data.pad_id);
 }
 
@@ -275,7 +275,7 @@ SagePad.link_handler = function () {
 
 SagePad.setOutput = function(output) {
     var self = SagePad;
-    self.dom_output.text(output);
+    self.dom_output.html(output);
     self.setLayout(self.LAYOUT_OUTPUT);
 }
 
