@@ -147,6 +147,15 @@ class PadOutput_RichText(PadOutput_Base):
             s += 'stderr: ' + self._stderr + '\n'
         return s
 
+    def image_size(self, base64png):
+        from PIL import Image
+        import base64
+        from StringIO import StringIO
+        f = StringIO(base64.decodestring(base64png))
+        image = Image.open(f)
+        image.verify()
+        return image.size
+
     def html(self):
         import cgi
         s = ''
@@ -159,9 +168,14 @@ class PadOutput_RichText(PadOutput_Base):
                 s += '<div class="pad_IOtag">Out['+str(i)+']:'+'</div>\n'
                 s += '<div class="pad_output">'
                 if entry['mime'] == 'image/png':
-                    s += '<img src="data:image/png;base64,'
-                    s += entry['image/png']
-                    s += '" width=781 height=582/>'
+                    img = entry['image/png']
+                    try:
+                        w,h = self.image_size(img)
+                        s += '<img src="data:image/png;base64,'
+                        s += entry['image/png']
+                        s += '" width='+str(w)+' height='+str(h)+'/>\n'
+                    except Exception as e:
+                        s += '<div class="error">Corrupt image: '+str(e)+'</div>\n'
                 elif entry['mime'] == 'application/latex':
                     s += '$'+entry['application/latex']+'$'
                 else:
