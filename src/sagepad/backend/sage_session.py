@@ -373,6 +373,7 @@ class SageRunner(object):
         self._install_displayhook(entry)
         exec(code, self._global_ns, self._local_ns)
         self._uninstall_displayhook()
+        self._global_ns.update(self._local_ns)
 
     def run(self):
         self._pad_input = sys.stdin.read()
